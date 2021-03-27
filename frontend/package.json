@@ -1,0 +1,28 @@
+{
+  "name": "verplant",
+  "version": "1.0.0",
+  "description": "The frontend to an appointment negotiating system",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/docweirdo/verplant.git"
+  },
+  "keywords": [
+    "appointment",
+    "calendar",
+    "doodle",
+    "planning"
+  ],
+  "author": "Corin Baurmann <corin.baurmann@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/docweirdo/verplant/issues"
+  },
+  "homepage": "https://github.com/docweirdo/verplant#readme",
+  "dependencies": {
+    "vue": "^3.0.9"
+  }
+}
