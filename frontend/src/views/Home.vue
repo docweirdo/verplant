@@ -25,11 +25,7 @@ import { defineComponent, ref } from "vue";
 import Card from "primevue/card";
 import Dropdown from "primevue/dropdown";
 import { currentTranslation } from "@/translations";
-
-interface Course {
-  name: string;
-  code: number;
-}
+import * as api from "@/api";
 
 export default defineComponent({
   name: "Home",
@@ -37,24 +33,30 @@ export default defineComponent({
     Card,
     Dropdown,
   },
-  setup() {
+  async setup() {
     const selectedCourse = ref(null);
 
-    const groupedCourses: { courses: Course[]; groupType: string }[] = [
-      { groupType: "Digitales", 
-        courses: [
-          {name: "Photoshop", code: 1},
-          {name: "Robotik", code: 2}
-        ]
-      },
-      { groupType: "Zeichnen", 
-        courses: [
-          { name: "Moderne Kunst", code: 3 },
-          { name: "Modellzeichnen", code: 4 },
-        ]
-      }
-    ];
+    const apiResult = await api.getCourses();
 
+    const courseTypes: Map<string, api.Course[]> = new Map();
+
+    for (const result of apiResult) {
+      const cType = result.course_type ?? currentTranslation.miscCourseType;
+      const c = courseTypes.get(cType);
+      if (c) c.push(result);
+      else courseTypes.set(cType, [result]);
+      
+    }
+
+    const groupedCourses: { courses: api.Course[]; groupType: string }[] = [];
+
+    for (const [key, value] of courseTypes.entries()){
+      groupedCourses.push({
+        groupType: key,
+        courses: value
+      });
+    }
+      
     return {
       currentTranslation,
       groupedCourses,
