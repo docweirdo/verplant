@@ -32,8 +32,7 @@ table! {
         name -> Text,
         default_duration -> Nullable<Integer>,
         default_room_id -> Nullable<Integer>,
-        #[sql_name = "type"]
-        type_ -> Nullable<Text>,
+        course_type -> Nullable<Text>,
     }
 }
 

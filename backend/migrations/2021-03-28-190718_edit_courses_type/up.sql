@@ -1,3 +1,3 @@
 -- Your SQL goes here
 ALTER TABLE "courses" 
-ADD COLUMN "type" TEXT;
+ADD COLUMN "course_type" TEXT;
