@@ -1,4 +1,4 @@
-# verplant
+# frontend
 
 ## Project setup
 ```
