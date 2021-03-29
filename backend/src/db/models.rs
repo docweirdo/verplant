@@ -1,4 +1,4 @@
-use crate::schema::*;
+use crate::db::schema::*;
 use serde::Serialize;
 
 
@@ -21,3 +21,4 @@ pub struct Course {
     pub default_room_id: Option<i32>,
     pub course_type: Option<String>
 }
+

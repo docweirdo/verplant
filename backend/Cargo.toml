@@ -8,8 +8,10 @@ edition = "2018"
 
 [dependencies]
 diesel = { version = "1.4.6", features = ["sqlite"] }
-rocket = { version = "0.4.7", features = ["tls"] }
+rocket = { version = "0.4.7" } #, features = ["tls"] }
 serde = { version = "1.0.125", features = ["derive"] }
+jsonwebtoken = "7.2.0"
+pwhash = "1"
 
 [dependencies.rocket_contrib]
 version = "0.4.7"

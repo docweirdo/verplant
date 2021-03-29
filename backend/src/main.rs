@@ -7,17 +7,16 @@
 #[macro_use] extern crate diesel;
 
 
-#[database("sqlite_db")]
-pub struct DBConn(diesel::SqliteConnection);
-
-pub mod schema;
-pub mod models;
+pub mod db;
 pub mod http_api;
+
+use db::DBConn;
 
 fn main() {
     println!("Hello, world!");
 
-    rocket::ignite().attach(DBConn::fairing()).mount("/api/", routes![http_api::index]).launch();
+    rocket::ignite().attach(DBConn::fairing()).mount("/api/", routes![http_api::get_courses])
+    .mount("api/auth/", routes![http_api::auth::login]).launch();
 
     
 }
