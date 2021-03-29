@@ -1,2 +1,6 @@
 [global.databases]
 sqlite_db = { url = "verplant.sqlite3" }
+
+[global.tls]
+certs = "verplant.pem"
+key = "verplant.key"
