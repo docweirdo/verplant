@@ -58,6 +58,7 @@ table! {
     providers (person_id) {
         person_id -> Integer,
         password_hash -> Nullable<Text>,
+        is_admin -> Integer,
     }
 }
 

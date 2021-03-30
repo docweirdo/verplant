@@ -1,28 +1,48 @@
+use log::info;
 use pwhash::bcrypt;
-use std::result::Result;
+use diesel::{prelude::*, update};
+use anyhow::{Result, bail};
+
 
 pub mod models;
 pub mod schema;
 
 use schema::providers::dsl::*;
-use schema::persons::dsl::{persons, id};
+use schema::persons::dsl::*;
+use models::*;
 
 #[database("sqlite_db")]
 pub struct DBConn(diesel::SqliteConnection);
 
 
 
+/// Returns the id if user is verified
+pub fn verify_user(conn: &DBConn, user_email: &str, password: &str) -> Result<i32> {
 
-pub fn verify_user(conn: DBConn, email: String, password: String) -> Result<(), ()> {
+    let user : Person = persons.filter(email.eq(user_email)).first::<Person>(&conn.0)?;
 
-
-    let pw_hash = bcrypt::hash(password).unwrap();
-
-    allow_tables_to_appear_in_same_query!(persons, providers);
-
-    match persons.inner_join(providers.on(person_id.like(id)).select(password_hash)).load(&conn.0) {
-        [pw_hash] => return Ok(None),
-        _ => return Err(None)
+    match providers.find(user.id).select(password_hash).first::<Option<String>>(&conn.0)? {
+        Some(pw_hash) => {
+            if bcrypt::verify(password, &pw_hash) {
+                return Ok(user.id)
+            } else {
+                bail!("Password hash does not match");
+            };
+            },         
+        _ => bail!("No password set for provider with id {}", user.id)
     }
+}
 
+pub fn set_password(conn: &DBConn, user_id: i32, password: &str) -> Result<()>{
+    let hash : String = bcrypt::hash(password).unwrap();
+
+    update(providers.find(user_id)).set(password_hash.eq(hash)).execute(&conn.0)?;
+    info!("Set password for user {}", user_id);
+    
+    Ok(())
+}   
+
+pub fn is_user_admin(conn: DBConn, user_id: i32) -> Result<bool>{
+    let result : bool = providers.find(user_id).select(is_admin).first::<i32>(&conn.0)? != 0;
+    Ok(result)
 }
