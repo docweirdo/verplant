@@ -5,40 +5,55 @@
         {{ currentTranslation.bookingCardTitle }}
       </template>
       <template #content>
-        <img alt="Vue logo" src="../assets/logo.png" />
-        <Dropdown
-          v-model="selectedCourse"
-          v-bind:options="groupedCourses"
-          optionLabel="name"
-          optionGroupLabel="groupType"
-          optionGroupChildren="courses"
-          v-bind:placeholder="currentTranslation.selectedCoursePlaceholder"
-          v-bind:filter="true"
-        />
+        <h4>{{ currentTranslation.course }}</h4>
+        <div class="field-with-info">
+          <Dropdown
+            v-model="selectedCourse"
+            v-bind:options="groupedCourses"
+            optionLabel="name"
+            optionGroupLabel="groupType"
+            optionGroupChildren="courses"
+            v-bind:placeholder="currentTranslation.selectedCoursePlaceholder"
+            v-bind:filter="true"
+          />
+          <i class="pi pi-question-circle info-icon" v-on:click="infoDialog.displayInfoDialog(currentTranslation.course, currentTranslation.information.courseSelection)"/>
+        </div>
       </template>
     </Card>
+    <InfoDialog ref="infoDialog"/>
   </div>
 </template>
 
 <script lang="ts">
+// Foreign stuff
 import { defineComponent, ref } from "vue";
+
+// Our stuff
+import{  api, Course } from "@/api";
+import { currentTranslation } from "@/translations";
+
+// Foreign Components
 import Card from "primevue/card";
 import Dropdown from "primevue/dropdown";
-import { currentTranslation } from "@/translations";
-import * as api from "@/api";
+
+// Our Components
+import InfoDialog from "@/components/InfoDialog.vue";
+
 
 export default defineComponent({
   name: "Home",
   components: {
     Card,
     Dropdown,
+    InfoDialog,
   },
   async setup() {
     const selectedCourse = ref(null);
+    const infoDialog = ref(null);
 
     const apiResult = await api.getCourses();
 
-    const courseTypes: Map<string, api.Course[]> = new Map();
+    const courseTypes: Map<string, Course[]> = new Map();
 
     for (const result of apiResult) {
       const cType = result.course_type ?? currentTranslation.miscCourseType;
@@ -48,7 +63,7 @@ export default defineComponent({
       
     }
 
-    const groupedCourses: { courses: api.Course[]; groupType: string }[] = [];
+    const groupedCourses: { courses: Course[]; groupType: string }[] = [];
 
     for (const [key, value] of courseTypes.entries()){
       groupedCourses.push({
@@ -61,6 +76,7 @@ export default defineComponent({
       currentTranslation,
       groupedCourses,
       selectedCourse,
+      infoDialog
     };
   },
 });
@@ -75,11 +91,27 @@ export default defineComponent({
 }
 
 .center-card {
-  max-width: 400px;
+  width: calc(100% - 20px);
+  max-width: 600px;
   max-height: 600px;
   margin: 0 auto;
 }
 
+h4 {
+  margin: 0;
+  margin-bottom: 2px;
+}
+
+.field-with-info {
+  display: grid;
+  grid-template-columns: auto 3em;
+  align-items: center;
+}
+
+.field-with-info > .info-icon {
+  font-size: 1.5rem;
+  margin: 0 auto;
+}
 </style>
 
 <style>
