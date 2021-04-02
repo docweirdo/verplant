@@ -7,9 +7,17 @@
 </template>
 
 <script lang="ts">
+
+// Foreign stuff
 import { defineComponent, ref } from "vue";
-import Dialog from 'primevue/dialog';
+
+// Our stuff
 import { currentTranslation } from "@/translations";
+
+// Foreign components
+import Dialog from 'primevue/dialog';
+
+// Our components
 
 
 export default defineComponent({

@@ -1,9 +1,9 @@
 -- Your SQL goes here
 CREATE TABLE "appointments" (
     "id" INTEGER PRIMARY KEY NOT NULL,
-    "date" TEXT NOT NULL,
-    "start_time" TEXT NOT NULL, -- hhmm
-    "end_time" TEXT NOT NULL, -- hhmm
+    "date" TEXT NOT NULL, -- DD-MM-YYYY
+    "start_time" TEXT NOT NULL, -- hh:mm
+    "end_time" TEXT NOT NULL, -- hh:mm
     "books_id" INTEGER NOT NULL,
     "proposer_id" INTEGER NOT NULL, 
     "room_id" INTEGER NOT NULL, 

@@ -5,9 +5,10 @@
         {{ currentTranslation.bookingCardTitle }}
       </template>
       <template #content>
-        <h4>{{ currentTranslation.course }}</h4>
+        <label for="courseSelection">{{ currentTranslation.course }}</label>
         <div class="field-with-info">
           <Dropdown
+            id="courseSeleciton"
             v-model="selectedCourse"
             v-bind:options="groupedCourses"
             optionLabel="name"
@@ -17,6 +18,11 @@
             v-bind:filter="true"
           />
           <i class="pi pi-question-circle info-icon" v-on:click="infoDialog.displayInfoDialog(currentTranslation.course, currentTranslation.information.courseSelection)"/>
+        </div>
+        <label for="courseSelection">{{ currentTranslation.appointmentSuggestions }}</label>
+        <div class="field-with-info">
+          <AppointmentList class="appointment-list"/>
+          <i class="pi pi-question-circle info-icon" v-on:click="infoDialog.displayInfoDialog(currentTranslation.appointmentSuggestions, currentTranslation.information.appointmentList)"/>
         </div>
       </template>
     </Card>
@@ -38,6 +44,7 @@ import Dropdown from "primevue/dropdown";
 
 // Our Components
 import InfoDialog from "@/components/InfoDialog.vue";
+import AppointmentList from "@/components/AppointmentList.vue";
 
 
 export default defineComponent({
@@ -46,6 +53,7 @@ export default defineComponent({
     Card,
     Dropdown,
     InfoDialog,
+    AppointmentList
   },
   async setup() {
     const selectedCourse = ref(null);
@@ -97,15 +105,15 @@ export default defineComponent({
   margin: 0 auto;
 }
 
-h4 {
-  margin: 0;
-  margin-bottom: 2px;
+label {
+  font-weight: bold;
 }
 
 .field-with-info {
   display: grid;
   grid-template-columns: auto 3em;
   align-items: center;
+  margin-bottom: 1em;
 }
 
 .field-with-info > .info-icon {
