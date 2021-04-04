@@ -1,32 +1,51 @@
 <template>
   <div class="home">
-    <Card class="center-card">
-      <template #title>
-        {{ currentTranslation.bookingCardTitle }}
-      </template>
-      <template #content>
-        <label for="courseSelection">{{ currentTranslation.course }}</label>
-        <div class="field-with-info">
+    <div class="home-content">
+      <h1 id="card-headline" class="p-component"> {{ currentTranslation.bookingCardTitle }}</h1>
+      <Card class="center-card">
+        <template #content>
+          <div class="label-with-info">
+            <label>{{
+              currentTranslation.course
+            }}</label>
+            <i
+              class="pi pi-question-circle info-icon"
+              v-on:click="
+                infoDialog.displayInfoDialog(
+                  currentTranslation.course,
+                  currentTranslation.information.courseSelection
+                )
+              "
+            />
+          </div>
           <Dropdown
-            id="courseSeleciton"
-            v-model="selectedCourse"
-            v-bind:options="groupedCourses"
-            optionLabel="name"
-            optionGroupLabel="groupType"
-            optionGroupChildren="courses"
-            v-bind:placeholder="currentTranslation.selectedCoursePlaceholder"
-            v-bind:filter="true"
-          />
-          <i class="pi pi-question-circle info-icon" v-on:click="infoDialog.displayInfoDialog(currentTranslation.course, currentTranslation.information.courseSelection)"/>
-        </div>
-        <label for="courseSelection">{{ currentTranslation.appointmentSuggestions }}</label>
-        <div class="field-with-info">
-          <AppointmentList class="appointment-list"/>
-          <i class="pi pi-question-circle info-icon" v-on:click="infoDialog.displayInfoDialog(currentTranslation.appointmentSuggestions, currentTranslation.information.appointmentList)"/>
-        </div>
-      </template>
-    </Card>
-    <InfoDialog ref="infoDialog"/>
+              v-model="selectedCourse"
+              v-bind:options="groupedCourses"
+              optionLabel="name"
+              optionGroupLabel="groupType"
+              optionGroupChildren="courses"
+              v-bind:placeholder="currentTranslation.selectedCoursePlaceholder"
+              v-bind:filter="true"
+            />
+          <div id="infodiv-appoinmentList" class="label-with-info">
+            <label>{{
+              currentTranslation.appointmentSuggestions
+            }}</label>
+            <i
+              class="pi pi-question-circle info-icon"
+              v-on:click="
+                infoDialog.displayInfoDialog(
+                  currentTranslation.appointmentSuggestions,
+                  currentTranslation.information.appointmentList
+                )
+              "
+            />
+          </div>
+          <AppointmentList class="appointment-list" :bookingId="null" />
+        </template>
+      </Card>
+      <InfoDialog ref="infoDialog" />
+    </div>
   </div>
 </template>
 
@@ -35,7 +54,7 @@
 import { defineComponent, ref } from "vue";
 
 // Our stuff
-import{  api, Course } from "@/api";
+import { api, Course } from "@/api";
 import { currentTranslation } from "@/translations";
 
 // Foreign Components
@@ -46,14 +65,13 @@ import Dropdown from "primevue/dropdown";
 import InfoDialog from "@/components/InfoDialog.vue";
 import AppointmentList from "@/components/AppointmentList.vue";
 
-
 export default defineComponent({
   name: "Home",
   components: {
     Card,
     Dropdown,
     InfoDialog,
-    AppointmentList
+    AppointmentList,
   },
   async setup() {
     const selectedCourse = ref(null);
@@ -68,23 +86,22 @@ export default defineComponent({
       const c = courseTypes.get(cType);
       if (c) c.push(result);
       else courseTypes.set(cType, [result]);
-      
     }
 
     const groupedCourses: { courses: Course[]; groupType: string }[] = [];
 
-    for (const [key, value] of courseTypes.entries()){
+    for (const [key, value] of courseTypes.entries()) {
       groupedCourses.push({
         groupType: key,
-        courses: value
+        courses: value,
       });
     }
-      
+
     return {
       currentTranslation,
       groupedCourses,
       selectedCourse,
-      infoDialog
+      infoDialog,
     };
   },
 });
@@ -93,15 +110,31 @@ export default defineComponent({
 <style scoped>
 .home {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  background-color: var(--surface-800);
 }
 
+#card-headline {
+  font-size: 2em;
+  font-weight: 500;
+  color: white;
+  margin-bottom: 5px;
+}
+
+@media only screen and (max-height: 600px){
+  #card-headline {
+    font-size: 1.2em;
+  }
+}
+
+
 .center-card {
-  width: calc(100% - 20px);
+  padding-top: 0px;
+  width: calc(100vw - 20px);
   max-width: 600px;
-  max-height: 600px;
   margin: 0 auto;
 }
 
@@ -109,16 +142,29 @@ label {
   font-weight: bold;
 }
 
-.field-with-info {
-  display: grid;
-  grid-template-columns: auto 3em;
+.label-with-info {
+  margin-bottom: 0.2em;
+  margin-top: 1em;
+  display: flex;
   align-items: center;
-  margin-bottom: 1em;
 }
 
-.field-with-info > .info-icon {
-  font-size: 1.5rem;
-  margin: 0 auto;
+.info-icon {
+  font-size: 1rem;
+  margin-left: 5px;
+}
+
+::v-deep(#appointments) {
+  height: calc(100vh - 400px);
+  max-height: 400px;
+  overflow-y: scroll;
+}
+
+@media only screen and (max-height: 600px) {
+  ::v-deep(#appointments) {
+    height: unset;
+    max-height: unset;
+  }
 }
 </style>
 
@@ -130,4 +176,9 @@ label {
   color: var(--text-color) !important;
   font-weight: bold !important;
 }
+
+.center-card.p-card > .p-card-body, .center-card.p-card > .p-card-body > .p-card-content {
+  padding-top: 1px;
+}
+
 </style>
