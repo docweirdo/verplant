@@ -7,7 +7,7 @@ CREATE TABLE "appointments" (
     "books_id" INTEGER NOT NULL,
     "proposer_id" INTEGER NOT NULL, 
     "room_id" INTEGER NOT NULL, 
-    "state" TEXT NOT NULL, -- allowed: "SUGGESTION", "PENDING", "APPROVED", "REJECTED"
+    "state" TEXT NOT NULL, -- allowed: "SUGGESTED", "APPROVED", "REJECTED"
     FOREIGN KEY ("books_id")
        REFERENCES "books" ("id"),
     FOREIGN KEY ("proposer_id")

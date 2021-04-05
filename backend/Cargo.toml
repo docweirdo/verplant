@@ -15,7 +15,7 @@ pwhash = "1"
 time = "0.1.43"
 log = "0.4.14"
 env_logger = "0.8.3"
-anyhow = "1.0.40"
+thiserror = "1.0.24"
 
 [dependencies.rocket_contrib]
 version = "0.4.7"

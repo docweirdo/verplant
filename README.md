@@ -27,3 +27,8 @@ At the moment we do **not** aim for these features:
 * pretty much anything not needed for an MVP with the features described above in *Functionality*
 
 The name of the project is german for: someone or something being planned (out) or scheduled (out), but also somenone being chaotic, confused or spaced out
+
+### TODO
+* Fix/Streamline Mobile Layout 
+* Better Error Management in Backend allowing differentiation
+* Chip Design and/or Filtering Chips in Frontend depending on available appointments
