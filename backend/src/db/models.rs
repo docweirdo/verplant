@@ -35,7 +35,7 @@ pub struct Provider {
 
 #[derive(Queryable, Debug, Serialize, Identifiable, Associations)]
 #[table_name="appointments"]
-#[belongs_to(Person, foreign_key = "person_id")]
+#[belongs_to(Person, foreign_key = "proposer_id")]
 #[primary_key(id)]
 pub struct Appointment {
     pub id: i32,
@@ -43,7 +43,7 @@ pub struct Appointment {
     pub starttime: String,
     pub endtime: String,
     pub status: String,
-    pub person_id: i32
+    pub proposer_id: i32
 }
 
 #[derive(Queryable, Debug, Serialize, Identifiable, Associations)]

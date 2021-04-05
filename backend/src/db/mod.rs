@@ -21,7 +21,7 @@ pub fn verify_user(conn: &DBConn, user_email: &str, password: &str) -> Result<i3
     // Maybe change Query to one with inner join
     let user: Person = persons
         .filter(email.eq(user_email))
-        .first::<Person>(&conn.0)?;
+        .first::<Person>(&conn.0).map_err(diesel_to_no_entry)?;
 
     match Provider::belonging_to(&user)
         .select(password_hash)
@@ -81,7 +81,7 @@ fn diesel_to_no_entry(err: diesel::result::Error) -> DatabaseError {
 
 /// returns the course name if successfull
 pub fn get_booking_info(conn: &DBConn, booking_url: &str) -> Result<String, DatabaseError> {
-    let result: Vec<String> = books
+    let mut result: Vec<String> = books
         .filter(url.eq(booking_url))
         .inner_join(courses.on(schema::courses::id.eq(course_id)))
         .select(schema::courses::name)
@@ -89,7 +89,7 @@ pub fn get_booking_info(conn: &DBConn, booking_url: &str) -> Result<String, Data
 
     match result.len() {
         0 => return Err(DatabaseError::NoEntry),
-        1 => return Ok(result[0]),
+        1 => return Ok(result.remove(0)),
         _ => return Err(DatabaseError::Ambiguous),
     }
 }
