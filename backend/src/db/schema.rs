@@ -6,7 +6,7 @@ table! {
         end_time -> Text,
         books_id -> Integer,
         proposer_id -> Integer,
-        room_id -> Integer,
+        room_id -> Nullable<Integer>,
         state -> Text,
     }
 }
@@ -16,6 +16,7 @@ table! {
         id -> Integer,
         url -> Text,
         course_id -> Integer,
+        customer_id -> Integer,
     }
 }
 
@@ -73,6 +74,7 @@ joinable!(appointments -> books (books_id));
 joinable!(appointments -> persons (proposer_id));
 joinable!(appointments -> rooms (room_id));
 joinable!(books -> courses (course_id));
+joinable!(books -> customers (customer_id));
 joinable!(courses -> rooms (default_room_id));
 joinable!(customers -> persons (person_id));
 joinable!(providers -> persons (person_id));

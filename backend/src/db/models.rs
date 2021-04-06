@@ -44,14 +44,27 @@ pub struct Appointment {
     pub endtime: String,
     pub status: String,
     pub proposer_id: i32
+    // sTODO: some fields are missing
 }
 
 #[derive(Queryable, Debug, Serialize, Identifiable, Associations)]
 #[table_name="books"]
 #[belongs_to(Course, foreign_key = "course_id")]
+#[belongs_to(Customer, foreign_key = "course_id")]
 #[primary_key(id)]
 pub struct Booking{
     pub id: i32,
     pub url: String,
-    pub course_id: i32
+    pub course_id: i32,
+    pub customer_id: i32
+}
+
+#[derive(Queryable, Debug, Serialize, Identifiable, Associations)]
+#[table_name="customers"]
+#[belongs_to(Person, foreign_key = "person_id")]
+#[primary_key(person_id)]
+pub struct Customer{
+    pub person_id: i32,
+    pub organisation: String, 
+    pub class: Option<String>
 }

@@ -30,5 +30,5 @@ The name of the project is german for: someone or something being planned (out) 
 
 ### TODO
 * Fix/Streamline Mobile Layout 
-* Better Error Management in Backend allowing differentiation
 * Chip Design and/or Filtering Chips in Frontend depending on available appointments
+* Check out wether transactions are necessary everywhere

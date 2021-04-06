@@ -19,9 +19,8 @@ fn main() {
     env_logger::init();
 
     info!("Server starting");
-
-    rocket::ignite().attach(DBConn::fairing()).mount("/api/", routes![http_api::get_courses, http_api::get_provider_appointments])
-    .mount("/api/auth/", routes![http_api::auth::login, http_api::auth::test]).launch();
-
-    
+    let mut rocket = rocket::ignite().attach(DBConn::fairing());
+    rocket = http_api::mount_endpoints(rocket);
+    rocket = http_api::auth::mount_endpoints(rocket);
+    rocket.launch();
 }

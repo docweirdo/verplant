@@ -5,6 +5,7 @@ use rocket::{
     http::{Cookie, Cookies, Status},
     request::{FromRequest, Outcome},
     Request,
+    Rocket
 };
 use rocket_contrib::json::Json;
 use serde::{Deserialize, Serialize};
@@ -16,6 +17,10 @@ use db::DBConn;
 use db::DatabaseError;
 
 const COOKIE_DURATION: u64 = 20 * 60;
+
+pub fn mount_endpoints(rocket: Rocket) -> Rocket {
+    rocket.mount("/api/auth/", routes![login, test])
+}
 
 #[derive(Serialize, Deserialize)]
 pub struct Credentials {
