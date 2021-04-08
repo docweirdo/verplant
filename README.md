@@ -14,7 +14,7 @@ services from a starting page by typing in their contact information, the desire
 They'll be given a static link which they can later on use to check on and interact with their booking process. A provider will be able to log into
 their account and check suggested dates as well as make suggestions of their own. They will be able to see the suggested appointments of their customers
 as well as the suggested appointments of other booking processes concerning courses/services which are associated with the same room as the courses/services
-they provide, so they can spot conflicting suggestions and make sure no appointments are at a time where room needed to perform the course/service is not available.
+they provide, so they can spot conflicting suggestions and make sure no appointments are made at a time when a room needed to perform the course/service is not available.
 
 ### Cool looking graphs
 We laid out or data model in an [Entity Relationship Model](./erm.png).
@@ -26,7 +26,7 @@ At the moment we do **not** aim for these features:
 * dedicated room booking and/or ressource management ([Booked Scheduler](https://github.com/effgarces/BookedScheduler))
 * pretty much anything not needed for an MVP with the features described above in *Functionality*
 
-The name of the project is german for: someone or something being planned (out) or scheduled (out), but also somenone being chaotic, confused or spaced out
+The name of the project is german for: someone or something being planned (out) or scheduled (out), but also somenone being chaotic, confused or unorganized
 
 ### TODO
 * Fix/Streamline Mobile Layout 
