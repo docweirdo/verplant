@@ -41,7 +41,7 @@
               "
             />
           </div>
-          <AppointmentList class="appointment-list" :bookingId="null" />
+          <AppointmentList class="appointment-list" :bookingURL="null" />
         </template>
       </Card>
       <InfoDialog ref="infoDialog" />
@@ -81,6 +81,7 @@ export default defineComponent({
 
     const courseTypes: Map<string, Course[]> = new Map();
 
+    // Split courses after types
     for (const result of apiResult) {
       const cType = result.course_type ?? currentTranslation.miscCourseType;
       const c = courseTypes.get(cType);
@@ -124,12 +125,11 @@ export default defineComponent({
   margin-bottom: 5px;
 }
 
-@media only screen and (max-height: 600px){
+@media only screen and (max-height: 900px){
   #card-headline {
     font-size: 1.2em;
   }
 }
-
 
 .center-card {
   padding-top: 0px;
@@ -152,6 +152,7 @@ label {
 .info-icon {
   font-size: 1rem;
   margin-left: 5px;
+  cursor: pointer;
 }
 
 ::v-deep(#appointments) {
@@ -160,7 +161,7 @@ label {
   overflow-y: scroll;
 }
 
-@media only screen and (max-height: 600px) {
+@media only screen and (max-height: 900px) {
   ::v-deep(#appointments) {
     height: unset;
     max-height: unset;

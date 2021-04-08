@@ -39,7 +39,6 @@ pub struct Provider {
 #[primary_key(id)]
 pub struct Appointment {
     pub id: i32,
-    pub date: String,
     pub starttime: String,
     pub endtime: String,
     pub status: String,

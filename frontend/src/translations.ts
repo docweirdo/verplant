@@ -9,9 +9,9 @@ export const currentTranslation = {
     "appointmentSuggestions" : "Terminvorschläge",
     "appointmentState": {
         [AppointmentStatus.Approved]: "Termin angenommen",
-        [AppointmentStatus.Pending]: "Vorschlag ausstehend",
+        [AppointmentStatus.Pending]: "Antwort ausstehend",
         [AppointmentStatus.Rejected]: "Vorschlag abgelehnt",
-        [AppointmentStatus.Suggested]: "Offener Vorschlag für Sie"
+        [AppointmentStatus.Suggested]: "Offener Vorschlag an Sie"
     },
     "newAppointment": "Neuer Terminvorschlag",
     "noAppointmentsMessage": "Keine Terminvorschläge.",

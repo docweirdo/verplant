@@ -3,8 +3,8 @@
         <div class="appointment-list">
             <div id="appointments" class="p-inputtextarea p-inputtext p-component">
                 <div class="p-component p-card p-shadow-10" v-for="appointment in filteredAppointments" :key="appointment.id">
-                  <div class="date">{{ appointment.date.format("L") }}</div>
-                  <div class="time">{{ appointment.starttime.format("LT") }} - {{ appointment.endtime.format("LT") }}</div>
+                  <div class="date">{{ toDateString(appointment.starttime) }}</div>
+                  <div class="time">{{ toTimeString(appointment.starttime) }} - {{ toTimeString(appointment.endtime) }}</div>
                   <div class="status">{{ currentTranslation.appointmentState[appointment.status] ?? appointment.status }}</div>
                   <div class="controls" v-if="appointment.status != ''">
                     <span class="p-buttonset" v-if="appointment.status == 'SUGGESTED'">
@@ -59,13 +59,17 @@ export default defineComponent({
       Chip
   },
   props: {
-      bookingId: Number,
+      bookingURL: String,
   },
   async setup(props) {
     const infoDialog = ref(false);
     const appointments : Ref<Appointment[]> = ref([] as any);
 
-    appointments.value = await api.getAppointments(props.bookingId ?? 1);
+    //appointments.value = await api.getAppointments(props.bookingURL ?? "abcde"); // TODO: Booking ID Logic
+    const temp = await api.getAppointments(props.bookingURL ?? "abcde"); // TODO: Booking ID Logic
+    (window as any).res = temp
+    appointments.value = temp
+  
 
     const filterOptions = ref(Object.entries(AppointmentStatus)
       .map(([k,v]) => { return {
@@ -78,13 +82,23 @@ export default defineComponent({
       return appointments.value.filter(e => filterOptions.value.find(f => e.status==f.type && f.active) != undefined);
     });
 
+    const toDateString = (startTime: Date): string => {
+      return startTime.toLocaleDateString(navigator.language, {day: '2-digit', month: '2-digit', year: '2-digit'});
+    };
+
+    const toTimeString = (time: Date): string => {
+      return time.toLocaleTimeString(navigator.language, {hour: '2-digit', minute:'2-digit'});
+    };
+
     return {
       appointments,
       filteredAppointments,
       currentTranslation,
       infoDialog,
       moment,
-      filterOptions
+      filterOptions,
+      toDateString,
+      toTimeString
     }
   }
 });

@@ -1,12 +1,11 @@
 table! {
     appointments (id) {
         id -> Integer,
-        date -> Text,
         start_time -> Text,
         end_time -> Text,
         books_id -> Integer,
         proposer_id -> Integer,
-        room_id -> Nullable<Integer>,
+        room_id -> Integer,
         state -> Text,
     }
 }

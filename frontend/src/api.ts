@@ -1,5 +1,3 @@
-import moment from "moment";
-
 export interface Course {
   id: number;
   name: string;
@@ -19,16 +17,16 @@ export enum AppointmentStatus {
 
 export interface Appointment {
   id: number;
-  date: moment.Moment;
-  starttime: moment.Moment;
-  endtime: moment.Moment;
+  starttime: Date;
+  endtime: Date;
   status: AppointmentStatus;
   proposer_id: number;
 }
 
+
 interface Api {
   getCourses(): Promise<Course[]>;
-  getAppointments(bookingId: number): Promise<Appointment[]>; 
+  getAppointments(bookingURL: string): Promise<Appointment[]>; 
 }
 
 class FakeApi implements Api {
@@ -56,38 +54,34 @@ class FakeApi implements Api {
       },
     ]);
   }
-
-  getAppointments(bookingId: number): Promise<Appointment[]> {
+  
+  getAppointments(bookingURL: string): Promise<Appointment[]> {
     return Promise.resolve([
       {
         id: 1,
-        date: moment("12-08-1999", "DD-MM-YYYY"),
-        starttime: moment("14:40", "hh:mm"),
-        endtime: moment("15:40", "hh:mm"),
+        starttime: new Date('2021-02-01T14:32Z'),
+        endtime: new Date('2021-02-01T15:32Z'), 
         status: AppointmentStatus.Rejected,
         proposer_id: 1
       },
       {
-        id: 1,
-        date: moment("15-08-1999", "DD-MM-YYYY"),
-        starttime: moment("12:00", "hh:mm"),
-        endtime: moment("13:00", "hh:mm"),
+        id: 2,
+        starttime: new Date('2021-05-01T14:32Z'),
+        endtime: new Date('2021-05-01T14:12Z'),
         status: AppointmentStatus.Pending,
         proposer_id: 1
       },
       {
-        id: 1,
-        date: moment("11-08-1999", "DD-MM-YYYY"),
-        starttime: moment("16:00", "hh:mm"),
-        endtime: moment("17:00", "hh:mm"),
+        id: 3,
+        starttime: new Date('2021-05-02T14:32Z'),
+        endtime: new Date('2021-05-02T14:12Z'),
         status: AppointmentStatus.Suggested,
         proposer_id: 2
       },
       {
-        id: 1,
-        date: moment("20-08-1999", "DD-MM-YYYY"),
-        starttime: moment("10:20", "hh:mm"),
-        endtime: moment("11:40", "hh:mm"),
+        id: 4,
+        starttime: new Date('2021-05-04T14:32Z'),
+        endtime: new Date('2021-05-04T14:12Z'),
         status: AppointmentStatus.Approved,
         proposer_id: 2
       }
@@ -105,8 +99,8 @@ class HttpApi implements Api {
     return obj;
   }
 
-  async getAppointments(bookingId : number): Promise<Appointment[]> {
-    const result = await fetch(`/api/bookings/${bookingId}`, { credentials: "include" });
+  async getAppointments(bookingURL : string): Promise<Appointment[]> {
+    const result = await fetch(`/api/bookings/${bookingURL}/appointments`, { credentials: "include" });
     const obj = await result.json() as any[];
     if (!Array.isArray(obj)) {
       console.warn("Expected array");
@@ -114,13 +108,12 @@ class HttpApi implements Api {
     return obj.map(appointment => {
       return {
         ...appointment,
-        date: moment(appointment.date, "DD-MM-YYYY"),
-        starttime: moment(appointment.starttime, "hh:mm"),
-        endtime: moment(appointment.endtime, "hh:mm"),
-      };
+        starttime: new Date(appointment.starttime),
+        endtime: new Date(appointment.endtime),
+      } as Appointment;
     });
   }
 }
 
-export const api: Api = new FakeApi();
-//export const api: Api = new HttpApi();
+//export const api: Api = new FakeApi();
+export const api: Api = new HttpApi();

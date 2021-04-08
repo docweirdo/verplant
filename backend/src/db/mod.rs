@@ -119,7 +119,6 @@ pub fn get_booking_appointments_from_url(
         .inner_join(appointments.on(schema::appointments::books_id.eq(schema::books::id)))
         .select((
             schema::appointments::id,
-            schema::appointments::date,
             schema::appointments::start_time,
             schema::appointments::end_time,
             schema::appointments::state,
@@ -155,7 +154,6 @@ pub fn add_appointments(conn: &DBConn, booking_url : &str, mut appointment_list 
 
         let appt = appointment_list.drain(..).map(|sug| {
             NewAppointment {
-                date: sug.date,
                 start_time: sug.starttime,
                 end_time: sug.endtime,
                 state: String::from("SUGGESTED"),
