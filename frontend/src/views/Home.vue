@@ -116,6 +116,9 @@ export default defineComponent({
   align-items: center;
   min-height: 100vh;
   background-color: var(--surface-800);
+  background-image: url("../assets/splash01.svg");
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
 #card-headline {
@@ -138,9 +141,6 @@ export default defineComponent({
   margin: 0 auto;
 }
 
-label {
-  font-weight: bold;
-}
 
 .label-with-info {
   margin-bottom: 0.2em;
@@ -180,6 +180,10 @@ label {
 
 .center-card.p-card > .p-card-body, .center-card.p-card > .p-card-body > .p-card-content {
   padding-top: 1px;
+}
+
+label {
+  font-weight: bold;
 }
 
 </style>
