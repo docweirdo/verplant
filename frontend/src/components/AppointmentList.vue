@@ -1,61 +1,94 @@
 <template>
-    <Suspense @fallback="console.log(23)">
-        <template #default>
-          <div class="appointment-list">
-              <div id="appointments" class="p-inputtextarea p-inputtext p-component">
-                  <div class="p-component p-card p-shadow-10" v-for="appointment in filteredAppointments" :key="appointment.id">
-                    <div class="date">{{ toDateString(appointment.starttime) }}</div>
-                    <div class="time">{{ toTimeString(appointment.starttime) }} - {{ toTimeString(appointment.endtime) }}</div>
-                    <div class="status">{{ currentTranslation.appointmentState[appointment.status] ?? appointment.status }}</div>
-                    <div class="controls" v-if="appointment.status != ''">
-                      <span class="p-buttonset" v-if="appointment.status == 'SUGGESTED'">
-                        <Button class="approve" icon="pi pi-check"/>
-                        <Button class="reject" icon="pi pi-times"/>
-                      </span>
-                      <i class="approved pi pi-check-circle" v-else-if="appointment.status == 'APPROVED'" />
-                      <Button class="pending" v-else-if="appointment.status == 'PENDING'" icon="pi pi-undo"/>
-                      <Button class="rejected" disabled v-else-if="appointment.status == 'REJECTED'" icon="pi pi-times"/>
-                    </div>
-                  </div>
-                  <div class="empty" v-if="appointments.length == 0">
-                    <i class="pi pi-info-circle"></i>
-                    {{ currentTranslation.noAppointmentsMessage }}
-                  </div>
-              </div>
-              <label for="filters" v-if="showFilters && filterOptions.length > 1">Filter</label>
-              <div id="filters" v-if="showFilters && filterOptions.length > 1">
-                <Chip v-for="f in filterOptions"
-                  :key="f.type" 
-                  :label="f.display" 
-                  @click.stop="f.active = !f.active" 
-                  :class="{active: f.active}"  />
-              </div>
-              <InfoDialog ref="infoDialog"/>
+  <Suspense @fallback="console.log(23)">
+    <template #default>
+      <div class="appointment-list">
+        <div id="appointments" class="p-inputtextarea p-inputtext p-component">
+          <div
+            class="p-component p-card p-shadow-10"
+            v-for="appointment in filteredAppointments"
+            :key="appointment.id"
+          >
+            <div class="date">{{ toDateString(appointment.starttime) }}</div>
+            <div class="time">
+              {{ toTimeString(appointment.starttime) }} -
+              {{ toTimeString(appointment.endtime) }}
+            </div>
+            <div class="status">
+              {{
+                currentTranslation.appointmentState[appointment.status] ??
+                appointment.status
+              }}
+            </div>
+            <div class="controls" v-if="appointment.status != ''">
+              <span
+                class="p-buttonset"
+                v-if="appointment.status == 'SUGGESTED'"
+              >
+                <Button class="approve" icon="pi pi-check" />
+                <Button class="reject" icon="pi pi-times" />
+              </span>
+              <i
+                class="approved pi pi-check-circle"
+                v-else-if="appointment.status == 'APPROVED'"
+              />
+              <Button
+                class="pending"
+                v-else-if="appointment.status == 'PENDING'"
+                icon="pi pi-undo"
+              />
+              <Button
+                class="rejected"
+                disabled
+                v-else-if="appointment.status == 'REJECTED'"
+                icon="pi pi-times"
+              />
+            </div>
           </div>
-        </template>
-        <template #fallback>
-          <div class="fallback">
-            <progress-spinner/>
-            <p>Loading...</p>
+          <div class="empty" v-if="appointments.length == 0">
+            <i class="pi pi-info-circle"></i>
+            {{ currentTranslation.noAppointmentsMessage }}
           </div>
-        </template>
-    </Suspense>
+        </div>
+        <div class="between-slot">
+          <slot name="between"></slot>
+        </div>
+        <label for="filters" v-if="showFilters && filterOptions.length > 1"
+          >Filter</label
+        >
+        <div id="filters" v-if="showFilters && filterOptions.length > 1">
+          <Chip
+            v-for="f in filterOptions"
+            :key="f.type"
+            :label="f.display"
+            @click.stop="f.active = !f.active"
+            :class="{ active: f.active }"
+          />
+        </div>
+        <InfoDialog ref="infoDialog" />
+      </div>
+    </template>
+    <template #fallback>
+      <div class="fallback">
+        <progress-spinner />
+        <p>Loading...</p>
+      </div>
+    </template>
+  </Suspense>
 </template>
 
 <script lang="ts">
-
 // Foreign stuff
 import { defineComponent, Ref, ref, computed } from "vue";
 import moment from "moment";
 
 // Our stuff
 import { currentTranslation } from "@/translations";
-import { api, Appointment, AppointmentStatus} from "@/api"
+import { api, Appointment, AppointmentStatus } from "@/api";
 
 // Foreign components
-import Button from 'primevue/button';
-import Chip from 'primevue/chip';
-import ProgressSpinner from 'primevue/progressspinner';
+import Button from "primevue/button";
+import Chip from "primevue/chip";
+import ProgressSpinner from "primevue/progressspinner";
 
 // Our components
 import InfoDialog from "@/components/InfoDialog.vue";
@@ -63,48 +96,66 @@ import InfoDialog from "@/components/InfoDialog.vue";
 export default defineComponent({
   name: "AppointmentList",
   components: {
-      InfoDialog,
-      Button,
-      Chip,
-      ProgressSpinner
+    InfoDialog,
+    Button,
+    Chip,
+    ProgressSpinner,
   },
   props: {
-      bookingURL: String,
-      showFilters: {
-        type: Boolean,
-        default: true
-      }
+    bookingURL: String,
+    showFilters: {
+      type: Boolean,
+      default: true,
+    },
   },
   async setup(props) {
     const infoDialog = ref(false);
-    const appointments : Ref<Appointment[]> = ref([] as any);
+    const appointments: Ref<Appointment[]> = ref([]);
 
     //appointments.value = await api.getAppointments(props.bookingURL ?? "abcde"); // TODO: Booking ID Logic
-    const rawAppointments = await api.getAppointments(props.bookingURL ?? "abcde"); // TODO: Booking ID Logic
-    
-    appointments.value = rawAppointments;
-  
+    const rawAppointments = await api.getAppointments(
+      props.bookingURL ?? "abcde"
+    ); // TODO: Booking ID Logic
 
-    const filterOptions = ref(Object.entries(AppointmentStatus)
-      .map(([k,v]) => { return {
-        display: currentTranslation.appointmentState[v],
-        type: v,
-        active: true
-      }; })
-      .filter(filterEntry => {
-        return appointments.value.some(apptmnt => apptmnt.status === filterEntry.type);
-      }));
-    
+    appointments.value = rawAppointments;
+
+    const filterOptions = ref(
+      Object.entries(AppointmentStatus)
+        .map(([_k, v]) => {
+          return {
+            display: currentTranslation.appointmentState[v],
+            type: v,
+            active: true,
+          };
+        })
+        .filter((filterEntry) => {
+          return appointments.value.some(
+            (apptmnt) => apptmnt.status === filterEntry.type
+          );
+        })
+    );
+
     const filteredAppointments = computed(() => {
-      return appointments.value.filter(e => filterOptions.value.find(f => e.status==f.type && f.active) != undefined);
+      return appointments.value.filter(
+        (e) =>
+          filterOptions.value.find((f) => e.status == f.type && f.active) !=
+          undefined
+      );
     });
 
     const toDateString = (startTime: Date): string => {
-      return startTime.toLocaleDateString(navigator.language, {day: '2-digit', month: '2-digit', year: '2-digit'});
+      return startTime.toLocaleDateString(navigator.language, {
+        day: "2-digit",
+        month: "2-digit",
+        year: "2-digit",
+      });
     };
 
     const toTimeString = (time: Date): string => {
-      return time.toLocaleTimeString(navigator.language, {hour: '2-digit', minute:'2-digit'});
+      return time.toLocaleTimeString(navigator.language, {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
     };
 
     return {
@@ -115,9 +166,9 @@ export default defineComponent({
       moment,
       filterOptions,
       toDateString,
-      toTimeString
-    }
-  }
+      toTimeString,
+    };
+  },
 });
 </script>
 
@@ -126,18 +177,17 @@ export default defineComponent({
   display: grid;
 }
 
-
 .p-card {
-
-  box-shadow: 0 2px 1px -1px rgba(0, 0, 0, 0.2), 0 1px 5px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 1px -1px rgba(0, 0, 0, 0.2), 0 1px 5px 0 rgba(0, 0, 0, 0.14),
+    0 1px 5px 0 rgba(0, 0, 0, 0.15);
 
   margin-bottom: 0.5em;
   display: grid;
   grid-template-columns: 1fr 1fr 96px;
 
-  grid-template-areas: 
-  "date time controls" 
-  "status status controls";
+  grid-template-areas:
+    "date time controls"
+    "status status controls";
 }
 
 .p-card > *:not(.controls) {
@@ -158,7 +208,7 @@ export default defineComponent({
 
 .p-card .status::before {
   display: block;
-  content: '';
+  content: "";
   background-color: lightgray;
   width: 100%;
   height: 1px;
@@ -210,7 +260,12 @@ export default defineComponent({
   border-width: 3px;
 }
 
-label[for=filters] {
+.p-card .between-slot {
+  justify-self: end;
+  margin: 0.5em 1em;
+}
+
+label[for="filters"] {
   margin: 0.2em 0;
 }
 
@@ -225,8 +280,7 @@ label[for=filters] {
 }
 
 .p-chip.active {
-  background-color: var(--cyan-500);
+  background-color: var(--accentColor);
+  color: white;
 }
-
-
 </style>

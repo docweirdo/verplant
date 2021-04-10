@@ -1,13 +1,13 @@
 <template>
   <div class="home">
     <div class="home-content">
-      <h1 id="card-headline" class="p-component"> {{ currentTranslation.bookingCardTitle }}</h1>
+      <h1 id="card-headline" class="p-component">
+        {{ currentTranslation.bookingCardTitle }}
+      </h1>
       <Card class="center-card">
         <template #content>
           <div class="label-with-info">
-            <label>{{
-              currentTranslation.course
-            }}</label>
+            <label>{{ currentTranslation.course }}</label>
             <i
               class="pi pi-question-circle info-icon"
               v-on:click="
@@ -19,18 +19,16 @@
             />
           </div>
           <Dropdown
-              v-model="selectedCourse"
-              v-bind:options="groupedCourses"
-              optionLabel="name"
-              optionGroupLabel="groupType"
-              optionGroupChildren="courses"
-              v-bind:placeholder="currentTranslation.selectedCoursePlaceholder"
-              v-bind:filter="true"
-            />
+            v-model="selectedCourse"
+            v-bind:options="groupedCourses"
+            optionLabel="name"
+            optionGroupLabel="groupType"
+            optionGroupChildren="courses"
+            v-bind:placeholder="currentTranslation.selectedCoursePlaceholder"
+            v-bind:filter="true"
+          />
           <div id="infodiv-appoinmentList" class="label-with-info">
-            <label>{{
-              currentTranslation.appointmentSuggestions
-            }}</label>
+            <label>{{ currentTranslation.appointmentSuggestions }}</label>
             <i
               class="pi pi-question-circle info-icon"
               v-on:click="
@@ -41,10 +39,28 @@
               "
             />
           </div>
-          <AppointmentList class="appointment-list" :bookingURL="null" />
+          <AppointmentList class="appointment-list" :bookingURL="null">
+            <template #between>
+              <Button
+                icon="pi pi-plus"
+                class="p-button-raised p-button-rounded add-appointment"
+                @click="displayNewAppointment = true"
+                style="background-color: var(--accentColor)"
+              />
+            </template>
+          </AppointmentList>
         </template>
       </Card>
       <InfoDialog ref="infoDialog" />
+      <Dialog
+        id="newAppointmentDialog"
+        :header="currentTranslation.newAppointment"
+        v-model:visible="displayNewAppointment"
+        :modal="true"
+        :dismissable-mask="true"
+      >
+        <AppointmentPicker @newAppointment="createAppointment" />
+      </Dialog>
     </div>
   </div>
 </template>
@@ -60,10 +76,13 @@ import { currentTranslation } from "@/translations";
 // Foreign Components
 import Card from "primevue/card";
 import Dropdown from "primevue/dropdown";
+import Dialog from "primevue/dialog";
+import Button from "primevue/button";
 
 // Our Components
 import InfoDialog from "@/components/InfoDialog.vue";
 import AppointmentList from "@/components/AppointmentList.vue";
+import AppointmentPicker from "@/components/AppointmentPicker.vue";
 
 export default defineComponent({
   name: "Home",
@@ -72,10 +91,14 @@ export default defineComponent({
     Dropdown,
     InfoDialog,
     AppointmentList,
+    Dialog,
+    AppointmentPicker,
+    Button,
   },
   async setup() {
     const selectedCourse = ref(null);
     const infoDialog = ref(null);
+    const displayNewAppointment = ref(false);
 
     const apiResult = await api.getCourses();
 
@@ -98,11 +121,17 @@ export default defineComponent({
       });
     }
 
+    const createAppointment = (event: Event) => {
+      console.log(event);
+    };
+
     return {
       currentTranslation,
       groupedCourses,
       selectedCourse,
       infoDialog,
+      displayNewAppointment,
+      createAppointment,
     };
   },
 });
@@ -128,7 +157,7 @@ export default defineComponent({
   margin-bottom: 5px;
 }
 
-@media only screen and (max-height: 900px){
+@media only screen and (max-height: 900px) {
   #card-headline {
     font-size: 1.2em;
   }
@@ -140,7 +169,6 @@ export default defineComponent({
   max-width: 600px;
   margin: 0 auto;
 }
-
 
 .label-with-info {
   margin-bottom: 0.2em;
@@ -178,12 +206,12 @@ export default defineComponent({
   font-weight: bold !important;
 }
 
-.center-card.p-card > .p-card-body, .center-card.p-card > .p-card-body > .p-card-content {
+.center-card.p-card > .p-card-body,
+.center-card.p-card > .p-card-body > .p-card-content {
   padding-top: 1px;
 }
 
 label {
   font-weight: bold;
 }
-
 </style>

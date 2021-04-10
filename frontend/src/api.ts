@@ -6,13 +6,21 @@ export interface Course {
   course_type?: string;
 }
 
+/**
+ * Describes a single appointment date and the time range
+ */
+export interface AppointmentSuggestion {
+  from: Date;
+  to: Date;
+}
+
 export enum AppointmentStatus {
   /// suggested to me
-  Suggested = "SUGGESTED", 
-  Approved = "APPROVED", 
-  Rejected = "REJECTED", 
+  Suggested = "SUGGESTED",
+  Approved = "APPROVED",
+  Rejected = "REJECTED",
   /// suggested by me
-  Pending = "PENDING"
+  Pending = "PENDING",
 }
 
 export interface Appointment {
@@ -23,10 +31,9 @@ export interface Appointment {
   proposer_id: number;
 }
 
-
 interface Api {
   getCourses(): Promise<Course[]>;
-  getAppointments(bookingURL: string): Promise<Appointment[]>; 
+  getAppointments(bookingURL: string): Promise<Appointment[]>;
 }
 
 class FakeApi implements Api {
@@ -54,41 +61,41 @@ class FakeApi implements Api {
       },
     ]);
   }
-  
+
   getAppointments(bookingURL: string): Promise<Appointment[]> {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       setTimeout(() => {
         resolve([
           {
             id: 1,
-            starttime: new Date('2021-02-01T14:32Z'),
-            endtime: new Date('2021-02-01T15:32Z'), 
+            starttime: new Date("2021-02-01T14:32Z"),
+            endtime: new Date("2021-02-01T15:32Z"),
             status: AppointmentStatus.Rejected,
-            proposer_id: 1
-          },/* 
+            proposer_id: 1,
+          },
           {
             id: 2,
-            starttime: new Date('2021-05-01T14:32Z'),
-            endtime: new Date('2021-05-01T14:12Z'),
+            starttime: new Date("2021-05-01T14:32Z"),
+            endtime: new Date("2021-05-01T14:12Z"),
             status: AppointmentStatus.Pending,
-            proposer_id: 1
-          }, */
+            proposer_id: 1,
+          },
           {
             id: 3,
-            starttime: new Date('2021-05-02T14:32Z'),
-            endtime: new Date('2021-05-02T14:12Z'),
+            starttime: new Date("2021-05-02T14:32Z"),
+            endtime: new Date("2021-05-02T14:12Z"),
             status: AppointmentStatus.Suggested,
-            proposer_id: 2
+            proposer_id: 2,
           },
           {
             id: 4,
-            starttime: new Date('2021-05-04T14:32Z'),
-            endtime: new Date('2021-05-04T14:12Z'),
+            starttime: new Date("2021-05-04T14:32Z"),
+            endtime: new Date("2021-05-04T14:12Z"),
             status: AppointmentStatus.Approved,
-            proposer_id: 2
-          }
+            proposer_id: 2,
+          },
         ]);
-      }, 1000);
+      }, 0);
     });
   }
 }
@@ -103,13 +110,15 @@ class HttpApi implements Api {
     return obj;
   }
 
-  async getAppointments(bookingURL : string): Promise<Appointment[]> {
-    const result = await fetch(`/api/bookings/${bookingURL}/appointments`, { credentials: "include" });
-    const obj = await result.json() as any[];
+  async getAppointments(bookingURL: string): Promise<Appointment[]> {
+    const result = await fetch(`/api/bookings/${bookingURL}/appointments`, {
+      credentials: "include",
+    });
+    const obj = (await result.json()) as any[];
     if (!Array.isArray(obj)) {
       console.warn("Expected array");
     }
-    return obj.map(appointment => {
+    return obj.map((appointment) => {
       return {
         ...appointment,
         starttime: new Date(appointment.starttime),
