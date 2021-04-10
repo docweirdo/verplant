@@ -56,36 +56,40 @@ class FakeApi implements Api {
   }
   
   getAppointments(bookingURL: string): Promise<Appointment[]> {
-    return Promise.resolve([
-      {
-        id: 1,
-        starttime: new Date('2021-02-01T14:32Z'),
-        endtime: new Date('2021-02-01T15:32Z'), 
-        status: AppointmentStatus.Rejected,
-        proposer_id: 1
-      },
-      {
-        id: 2,
-        starttime: new Date('2021-05-01T14:32Z'),
-        endtime: new Date('2021-05-01T14:12Z'),
-        status: AppointmentStatus.Pending,
-        proposer_id: 1
-      },
-      {
-        id: 3,
-        starttime: new Date('2021-05-02T14:32Z'),
-        endtime: new Date('2021-05-02T14:12Z'),
-        status: AppointmentStatus.Suggested,
-        proposer_id: 2
-      },
-      {
-        id: 4,
-        starttime: new Date('2021-05-04T14:32Z'),
-        endtime: new Date('2021-05-04T14:12Z'),
-        status: AppointmentStatus.Approved,
-        proposer_id: 2
-      }
-    ]);
+    return new Promise(resolve => {
+      setTimeout(() => {
+        resolve([
+          {
+            id: 1,
+            starttime: new Date('2021-02-01T14:32Z'),
+            endtime: new Date('2021-02-01T15:32Z'), 
+            status: AppointmentStatus.Rejected,
+            proposer_id: 1
+          },/* 
+          {
+            id: 2,
+            starttime: new Date('2021-05-01T14:32Z'),
+            endtime: new Date('2021-05-01T14:12Z'),
+            status: AppointmentStatus.Pending,
+            proposer_id: 1
+          },
+          {
+            id: 3,
+            starttime: new Date('2021-05-02T14:32Z'),
+            endtime: new Date('2021-05-02T14:12Z'),
+            status: AppointmentStatus.Suggested,
+            proposer_id: 2
+          }, */
+          {
+            id: 4,
+            starttime: new Date('2021-05-04T14:32Z'),
+            endtime: new Date('2021-05-04T14:12Z'),
+            status: AppointmentStatus.Approved,
+            proposer_id: 2
+          }
+        ]);
+      }, 1000);
+    });
   }
 }
 
@@ -115,5 +119,5 @@ class HttpApi implements Api {
   }
 }
 
-//export const api: Api = new FakeApi();
-export const api: Api = new HttpApi();
+export const api: Api = new FakeApi();
+//export const api: Api = new HttpApi();
