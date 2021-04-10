@@ -22,8 +22,8 @@
                     {{ currentTranslation.noAppointmentsMessage }}
                   </div>
               </div>
-              <label for="filters" v-if="showFilters && filterOptions.length > 0">Filter</label>
-              <div id="filters" v-if="showFilters">
+              <label for="filters" v-if="showFilters && filterOptions.length > 1">Filter</label>
+              <div id="filters" v-if="showFilters && filterOptions.length > 1">
                 <Chip v-for="f in filterOptions"
                   :key="f.type" 
                   :label="f.display" 
@@ -81,8 +81,8 @@ export default defineComponent({
 
     //appointments.value = await api.getAppointments(props.bookingURL ?? "abcde"); // TODO: Booking ID Logic
     const rawAppointments = await api.getAppointments(props.bookingURL ?? "abcde"); // TODO: Booking ID Logic
-    (window as any).appointments = rawAppointments
-    appointments.value = rawAppointments
+    
+    appointments.value = rawAppointments;
   
 
     const filterOptions = ref(Object.entries(AppointmentStatus)
