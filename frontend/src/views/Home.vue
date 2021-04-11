@@ -39,7 +39,11 @@
               "
             />
           </div>
-          <AppointmentList class="appointment-list" :bookingURL="null">
+          <AppointmentList
+            class="appointment-list"
+            :bookingURL="null"
+            v-model:appointments="appointments"
+          >
             <template #between>
               <Button
                 icon="pi pi-plus"
@@ -70,7 +74,7 @@
 import { defineComponent, ref } from "vue";
 
 // Our stuff
-import { api, Course } from "@/api";
+import { api, Course, AppointmentSuggestion, AppointmentStatus } from "@/api";
 import { currentTranslation } from "@/translations";
 
 // Foreign Components
@@ -121,11 +125,22 @@ export default defineComponent({
       });
     }
 
-    const createAppointment = (event: Event) => {
+    const rawAppointments = await api.getAppointments("abcde"); // TODO: Booking ID Logic
+    console.log(rawAppointments);
+    const appointments = ref(rawAppointments);
+
+    const createAppointment = (event: AppointmentSuggestion) => {
       console.log(event);
+      displayNewAppointment.value = false;
+      appointments.value.push({
+        starttime: event.from,
+        endtime: event.to,
+        status: AppointmentStatus.Pending,
+      });
     };
 
     return {
+      appointments,
       currentTranslation,
       groupedCourses,
       selectedCourse,
@@ -148,6 +163,7 @@ export default defineComponent({
   background-image: url("../assets/splash01.svg");
   background-repeat: no-repeat;
   background-position: center;
+  background-size: 100%;
 }
 
 #card-headline {

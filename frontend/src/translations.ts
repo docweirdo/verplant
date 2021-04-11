@@ -6,6 +6,10 @@ export const currentTranslation = {
   miscCourseType: "Andere",
   course: "Kurs",
   info: "Info",
+  email: "Email",
+  password: "Passwort",
+  login: "Einloggen",
+  loginCardTitle: "YouKunst Login",
   appointmentSuggestions: "Terminvorschläge",
   appointmentState: {
     [AppointmentStatus.Approved]: "Termin angenommen",

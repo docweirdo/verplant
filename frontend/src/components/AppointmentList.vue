@@ -84,6 +84,7 @@ import moment from "moment";
 // Our stuff
 import { currentTranslation } from "@/translations";
 import { api, Appointment, AppointmentStatus } from "@/api";
+import * as utils from "@/utils";
 
 // Foreign components
 import Button from "primevue/button";
@@ -107,17 +108,13 @@ export default defineComponent({
       type: Boolean,
       default: true,
     },
+    appointments: {
+      type: Array as () => Appointment[],
+      required: true,
+    },
   },
   async setup(props) {
     const infoDialog = ref(false);
-    const appointments: Ref<Appointment[]> = ref([]);
-
-    //appointments.value = await api.getAppointments(props.bookingURL ?? "abcde"); // TODO: Booking ID Logic
-    const rawAppointments = await api.getAppointments(
-      props.bookingURL ?? "abcde"
-    ); // TODO: Booking ID Logic
-
-    appointments.value = rawAppointments;
 
     const filterOptions = ref(
       Object.entries(AppointmentStatus)
@@ -129,44 +126,28 @@ export default defineComponent({
           };
         })
         .filter((filterEntry) => {
-          return appointments.value.some(
+          return props.appointments.some(
             (apptmnt) => apptmnt.status === filterEntry.type
           );
         })
     );
 
     const filteredAppointments = computed(() => {
-      return appointments.value.filter(
+      return props.appointments.filter(
         (e) =>
           filterOptions.value.find((f) => e.status == f.type && f.active) !=
           undefined
       );
     });
 
-    const toDateString = (startTime: Date): string => {
-      return startTime.toLocaleDateString(navigator.language, {
-        day: "2-digit",
-        month: "2-digit",
-        year: "2-digit",
-      });
-    };
-
-    const toTimeString = (time: Date): string => {
-      return time.toLocaleTimeString(navigator.language, {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    };
-
     return {
-      appointments,
       filteredAppointments,
       currentTranslation,
       infoDialog,
       moment,
       filterOptions,
-      toDateString,
-      toTimeString,
+      toDateString: utils.toDateString,
+      toTimeString: utils.toTimeString,
     };
   },
 });

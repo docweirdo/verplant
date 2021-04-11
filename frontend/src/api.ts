@@ -24,11 +24,11 @@ export enum AppointmentStatus {
 }
 
 export interface Appointment {
-  id: number;
+  id?: number;
   starttime: Date;
   endtime: Date;
   status: AppointmentStatus;
-  proposer_id: number;
+  proposer_id?: number;
 }
 
 interface Api {

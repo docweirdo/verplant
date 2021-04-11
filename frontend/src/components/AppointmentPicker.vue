@@ -1,7 +1,7 @@
 <template>
   <div class="appointment-picker">
     <label>{{ currentTranslation.date }}</label>
-    <Calendar v-model="day" class="cal" :inline="true" />
+    <Calendar v-model="day" class="cal" :inline="true" :minDate="new Date()" />
     <div class="time-wrapper">
       <label for="start">{{ currentTranslation.startTime }}:</label>
       <input id="start" type="time" v-model="startTime" class="time-picker" />
@@ -25,7 +25,13 @@ import moment from "moment";
 
 // Our stuff
 import { currentTranslation } from "@/translations";
-import { api, Appointment, AppointmentStatus } from "@/api";
+import {
+  api,
+  Appointment,
+  AppointmentStatus,
+  AppointmentSuggestion,
+} from "@/api";
+import * as utils from "@/utils";
 
 // Foreign components
 import Button from "primevue/button";
@@ -42,24 +48,44 @@ export default defineComponent({
   props: {
     duration: Date,
   },
-  setup(props) {
-    const day = ref(null);
-    const startTime = ref(null);
-    const endTime = ref(null);
+  emits: ["newAppointment"],
+  setup(props, { emit }) {
+    const day: Ref<Date | null> = ref(null);
+    const startTime: Ref<string | null> = ref(null);
+    const endTime: Ref<string | null> = ref(null);
     const returnData = () => {
-      console.log(day.value);
-      console.log(startTime.value);
-      console.log(endTime.value);
+      const myDay: Date | null = day.value;
+
+      if (!myDay) {
+        return;
+      }
+
+      const startHours: number = parseInt(
+        startTime.value?.split(":")[0] ?? "0"
+      );
+
+      const startMinutes: number = parseInt(
+        startTime.value?.split(":")[1] ?? "0"
+      );
+
+      const endHours: number = parseInt(endTime.value?.split(":")[0] ?? "0");
+
+      const endMinutes: number = parseInt(endTime.value?.split(":")[1] ?? "0");
+
+      const suggestion: AppointmentSuggestion = {
+        from: utils.addHoursAndMinutes(myDay, startHours, startMinutes),
+        to: utils.addHoursAndMinutes(myDay, endHours, endMinutes),
+      };
+
+      emit("newAppointment", suggestion);
     };
 
     const disableAddButton = computed(() => {
-      let missingInput: boolean = !(
-        day.value &&
-        startTime.value &&
-        endTime.value
-      );
+      let missingInput = !(day.value && startTime.value && endTime.value);
 
-      missingInput = missingInput && startTime.value < endTime.value; // Todo: Fix This
+      let durationIsNegative = (startTime.value ?? "") >= (endTime.value ?? "");
+
+      return durationIsNegative || missingInput;
     });
 
     return {
@@ -104,5 +130,9 @@ Button:enabled:focus {
 <style>
 .p-datepicker {
   border-color: rgba(0, 0, 0, 0.38) !important;
+}
+
+.p-datepicker span {
+  user-select: none;
 }
 </style>
