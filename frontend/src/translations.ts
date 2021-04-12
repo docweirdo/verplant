@@ -9,6 +9,7 @@ export const currentTranslation = {
   email: "Email",
   password: "Passwort",
   login: "Einloggen",
+  loginError: "Email oder Passwort sind falsch",
   loginCardTitle: "YouKunst Login",
   appointmentSuggestions: "Terminvorschläge",
   appointmentState: {

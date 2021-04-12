@@ -7,17 +7,48 @@
       <Card class="center-card">
         <template #content>
           <div class="login-fields">
-            <label for="email-field">{{ currentTranslation.email }}</label>
-            <InputText type="email" id="email-field" v-model="email" />
-            <label for="password-field">{{
-              currentTranslation.password
-            }}</label>
-            <InputText type="password" id="password-field" v-model="password" />
+            <template v-if="error">
+              <label for="email-field">{{ currentTranslation.email }}.</label>
+              <InputText
+                type="email"
+                id="email-field"
+                v-model="email"
+                class="p-invalid"
+              />
+              <label for="password-field">{{
+                currentTranslation.password
+              }}</label>
+              <InputText
+                type="password"
+                id="password-field"
+                v-model="password"
+                class="p-invalid"
+              />
+              <small id="login-failed" class="p-error"
+                >{{ currentTranslation.loginError }}.</small
+              >
+            </template>
+            <template v-else>
+              <label for="email-field">{{ currentTranslation.email }}</label>
+              <InputText type="email" id="email-field" v-model="email" />
+              <label for="password-field">{{
+                currentTranslation.password
+              }}</label>
+              <InputText
+                type="password"
+                id="password-field"
+                v-model="password"
+              />
+            </template>
           </div>
         </template>
       </Card>
       <div class="login-container">
-        <Button :label="currentTranslation.login" id="login-button" />
+        <Button
+          :label="currentTranslation.login"
+          id="login-button"
+          @click="login"
+        />
       </div>
     </div>
   </div>
@@ -47,10 +78,34 @@ export default defineComponent({
   },
   setup() {
     const email = ref(null);
+    const password = ref(null);
+    const error = ref(false);
+
+    const login = async () => {
+      // email validation, etc
+      const result: Response = await fetch("/api/auth/login", {
+        method: "POST",
+        body: JSON.stringify({
+          email: email.value,
+          password: password.value,
+        }),
+      });
+
+      if (!result.ok) {
+        error.value = true;
+        //do something
+      } else {
+        error.value = false;
+        //do something else
+      }
+    };
 
     return {
       currentTranslation,
       email,
+      password,
+      login,
+      error,
     };
   },
 });
@@ -106,12 +161,22 @@ export default defineComponent({
 .login-container {
   width: 100%;
   display: flex;
-  justify-content: end;
+  justify-content: flex-end;
 }
 
 .login-container > #login-button {
   margin-top: 0.5em;
   background-color: white;
   color: var(--accentColor);
+}
+
+.login-content .p-error {
+  margin-top: 0.5em;
+}
+</style>
+
+<style>
+.center-card .p-card-body {
+  padding-bottom: 8px;
 }
 </style>
