@@ -23,6 +23,7 @@
                 id="password-field"
                 v-model="password"
                 class="p-invalid"
+                v-on:keyup.enter="login"
               />
               <small id="login-failed" class="p-error"
                 >{{ currentTranslation.loginError }}.</small
@@ -38,6 +39,7 @@
                 type="password"
                 id="password-field"
                 v-model="password"
+                v-on:keyup.enter="login"
               />
             </template>
           </div>
@@ -45,9 +47,11 @@
       </Card>
       <div class="login-container">
         <Button
-          :label="currentTranslation.login"
+          :label="loading ? '' : currentTranslation.login"
           id="login-button"
           @click="login"
+          :icon="loading ? 'pi pi-spin pi-spinner' : ''"
+          :class="{ loading: loading }"
         />
       </div>
     </div>
@@ -61,6 +65,7 @@ import { defineComponent, ref } from "vue";
 // Our stuff
 import { api, Course } from "@/api";
 import { currentTranslation } from "@/translations";
+import router from "@/router";
 
 // Foreign Components
 import Card from "primevue/card";
@@ -77,26 +82,39 @@ export default defineComponent({
     Button,
   },
   setup() {
-    const email = ref(null);
-    const password = ref(null);
+    const email = ref("");
+    const password = ref("");
     const error = ref(false);
+    const loading = ref(false);
 
     const login = async () => {
+      loading.value = true;
       // email validation, etc
-      const result: Response = await fetch("/api/auth/login", {
-        method: "POST",
-        body: JSON.stringify({
-          email: email.value,
-          password: password.value,
-        }),
-      });
 
-      if (!result.ok) {
-        error.value = true;
-        //do something
-      } else {
-        error.value = false;
-        //do something else
+      // TODO: remove fake delay
+      await new Promise((r) => setTimeout(r, 2000));
+
+      try {
+        if (!(await api.login(email.value, password.value))) {
+          error.value = true;
+          // do something else?
+        } else {
+          error.value = false;
+          // redirect to base provider site
+          // if path is /login?redirect=/to/page, redirects to this path
+          const redirect = router.currentRoute.value.query.redirect;
+          if (redirect && !Array.isArray(redirect)) {
+            await router.replace(redirect);
+            // if this fails, we catch the error below
+          } else {
+            router.replace("/overview");
+          }
+          console.log("redirected");
+        }
+      } catch (error) {
+        console.warn(error);
+      } finally {
+        loading.value = false;
       }
     };
 
@@ -106,6 +124,7 @@ export default defineComponent({
       password,
       login,
       error,
+      loading,
     };
   },
 });
@@ -168,6 +187,12 @@ export default defineComponent({
   margin-top: 0.5em;
   background-color: white;
   color: var(--accentColor);
+  width: 150px;
+  transition: width 0.3s ease-in-out;
+}
+
+.login-container > #login-button.loading {
+  width: 50px;
 }
 
 .login-content .p-error {

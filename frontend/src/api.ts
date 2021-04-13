@@ -34,9 +34,15 @@ export interface Appointment {
 interface Api {
   getCourses(): Promise<Course[]>;
   getAppointments(bookingURL: string): Promise<Appointment[]>;
+  /**
+   * returns true if successfull, false if credentials were wrong, throws on response error
+   */
+  login(email: string, password: string): Promise<boolean>;
 }
 
 class FakeApi implements Api {
+  private loggedIn = false;
+
   getCourses() {
     return Promise.resolve([
       {
@@ -60,6 +66,15 @@ class FakeApi implements Api {
         course_type: "Zeichnen",
       },
     ]);
+  }
+
+  async login(email: string, password: string): Promise<boolean> {
+    console.log("fakeApi login", email, password);
+    if (email == "test@test.de") {
+      this.loggedIn = true;
+      return true;
+    }
+    return false;
   }
 
   getAppointments(bookingURL: string): Promise<Appointment[]> {
@@ -108,6 +123,18 @@ class HttpApi implements Api {
       console.warn("Expected array");
     }
     return obj;
+  }
+
+  async login(email: string, password: string): Promise<boolean> {
+    const result: Response = await fetch("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({
+        email: email,
+        password: password,
+      }),
+    });
+
+    return result.status == 200;
   }
 
   async getAppointments(bookingURL: string): Promise<Appointment[]> {
