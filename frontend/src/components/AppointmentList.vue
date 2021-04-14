@@ -24,8 +24,20 @@
                 class="p-buttonset"
                 v-if="appointment.status == 'SUGGESTED'"
               >
-                <Button class="approve" icon="pi pi-check" />
-                <Button class="reject" icon="pi pi-times" />
+                <Button
+                  class="approve"
+                  icon="pi pi-check"
+                  @click="
+                    appointmentChanged(appointment, AppointmentStatus.Approved)
+                  "
+                />
+                <Button
+                  class="reject"
+                  icon="pi pi-times"
+                  @click="
+                    appointmentChanged(appointment, AppointmentStatus.Rejected)
+                  "
+                />
               </span>
               <i
                 class="approved pi pi-check-circle"
@@ -35,6 +47,7 @@
                 class="pending"
                 v-else-if="appointment.status == 'PENDING'"
                 icon="pi pi-undo"
+                @click="appointmentChanged(appointment, 'WITHDRAWN')"
               />
               <Button
                 class="rejected"
@@ -113,7 +126,7 @@ export default defineComponent({
       required: true,
     },
   },
-  async setup(props) {
+  async setup(props, { emit }) {
     const infoDialog = ref(false);
 
     const filterOptions = ref(
@@ -140,7 +153,41 @@ export default defineComponent({
       );
     });
 
+    const appointmentChanged = (
+      appointment: Appointment,
+      action: AppointmentStatus | "WITHDRAWN"
+    ) => {
+      let appointments: Appointment[];
+      if (action === "WITHDRAWN") {
+        appointments = props.appointments.filter((e) => e !== appointment);
+      } else {
+        appointments = props.appointments.map((e) => {
+          if (e == appointment) {
+            switch (action) {
+              case AppointmentStatus.Pending:
+              case AppointmentStatus.Suggested:
+                console.warn(
+                  `appointmentChanged was called with invalid action ${action} for appointment ${e.id}`
+                );
+                break;
+              default:
+                e.status = action;
+                break;
+            }
+            return e;
+          } else {
+            // for appointments not matching the event
+            return e;
+          }
+        });
+      }
+
+      emit("update:appointments", appointments);
+    };
+
     return {
+      AppointmentStatus,
+      appointmentChanged,
       filteredAppointments,
       currentTranslation,
       infoDialog,

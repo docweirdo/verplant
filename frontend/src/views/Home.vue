@@ -48,7 +48,7 @@
               <Button
                 icon="pi pi-plus"
                 class="p-button-raised p-button-rounded add-appointment"
-                @click="displayNewAppointment = true"
+                @click="displayAppointmentPicker = true"
                 style="background-color: var(--accentColor)"
               />
             </template>
@@ -59,7 +59,7 @@
       <Dialog
         id="newAppointmentDialog"
         :header="currentTranslation.newAppointment"
-        v-model:visible="displayNewAppointment"
+        v-model:visible="displayAppointmentPicker"
         :modal="true"
         :dismissable-mask="true"
       >
@@ -102,7 +102,7 @@ export default defineComponent({
   async setup() {
     const selectedCourse = ref(null);
     const infoDialog = ref(null);
-    const displayNewAppointment = ref(false);
+    const displayAppointmentPicker = ref(false);
 
     const apiResult = await api.getCourses();
 
@@ -127,11 +127,11 @@ export default defineComponent({
 
     const rawAppointments = await api.getAppointments("abcde"); // TODO: Booking ID Logic
     console.log(rawAppointments);
-    const appointments = ref(rawAppointments);
+    const appointments = ref([...rawAppointments]);
 
     const createAppointment = (event: AppointmentSuggestion) => {
       console.log(event);
-      displayNewAppointment.value = false;
+      displayAppointmentPicker.value = false;
       appointments.value.push({
         starttime: event.from,
         endtime: event.to,
@@ -145,7 +145,7 @@ export default defineComponent({
       groupedCourses,
       selectedCourse,
       infoDialog,
-      displayNewAppointment,
+      displayAppointmentPicker,
       createAppointment,
     };
   },
