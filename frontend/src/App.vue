@@ -9,6 +9,11 @@
 body {
   margin: 0;
   --accentColor: #96146e;
+  background-color: var(--surface-800);
+  background-image: url("./assets/splash01.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100%;
 }
 
 #app {

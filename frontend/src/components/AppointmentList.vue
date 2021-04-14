@@ -2,7 +2,10 @@
   <Suspense @fallback="console.log(23)">
     <template #default>
       <div class="appointment-list">
-        <div id="appointments" class="p-inputtextarea p-inputtext p-component">
+        <div
+          id="appointments-field"
+          class="p-inputtextarea p-inputtext p-component"
+        >
           <div
             class="p-component p-card p-shadow-10"
             v-for="appointment in filteredAppointments"
@@ -69,7 +72,7 @@
           >Filter</label
         >
         <div id="filters" v-if="showFilters && filterOptions.length > 1">
-          <Chip
+          <Button
             v-for="f in filterOptions"
             :key="f.type"
             :label="f.display"
@@ -101,7 +104,7 @@ import * as utils from "@/utils";
 
 // Foreign components
 import Button from "primevue/button";
-import Chip from "primevue/chip";
+//import Chip from "primevue/chip";
 import ProgressSpinner from "primevue/progressspinner";
 
 // Our components
@@ -112,7 +115,7 @@ export default defineComponent({
   components: {
     InfoDialog,
     Button,
-    Chip,
+    //Chip,
     ProgressSpinner,
   },
   props: {
@@ -204,6 +207,20 @@ export default defineComponent({
 .appointment-list {
   display: grid;
 }
+
+#appointments-field {
+  height: 100%;
+  overflow-y: scroll;
+}
+
+/*
+@media only screen and (max-height: 700px) {
+  #appointments-field {
+    height: unset;
+    max-height: unset;
+  }
+}
+*/
 
 .p-card {
   box-shadow: 0 2px 1px -1px rgba(0, 0, 0, 0.2), 0 1px 5px 0 rgba(0, 0, 0, 0.14),
@@ -302,12 +319,13 @@ label[for="filters"] {
   gap: 0.3em;
 }
 
-.p-chip {
+#filters .p-button {
   cursor: pointer;
   user-select: none;
+  background-color: gray;
 }
 
-.p-chip.active {
+#filters .p-button.active {
   background-color: var(--accentColor);
   color: white;
 }

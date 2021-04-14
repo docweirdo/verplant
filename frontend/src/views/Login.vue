@@ -137,11 +137,6 @@ export default defineComponent({
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-color: var(--surface-800);
-  background-image: url("../assets/splash01.svg");
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 100%;
 }
 
 #card-headline {
