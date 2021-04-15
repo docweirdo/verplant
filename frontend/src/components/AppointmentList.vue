@@ -214,14 +214,12 @@ export default defineComponent({
   overflow-y: scroll;
 }
 
-/*
 @media only screen and (max-height: 700px) {
   #appointments-field {
     height: unset;
     max-height: unset;
   }
 }
-*/
 
 .p-card {
   box-shadow: 0 2px 1px -1px rgba(0, 0, 0, 0.2), 0 1px 5px 0 rgba(0, 0, 0, 0.14),
@@ -321,8 +319,6 @@ label[for="filters"] {
 }
 
 #filters .p-button {
-  cursor: pointer;
-  user-select: none;
   background-color: gray;
 }
 
