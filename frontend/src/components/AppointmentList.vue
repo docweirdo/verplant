@@ -206,6 +206,7 @@ export default defineComponent({
 <style scoped>
 .appointment-list {
   display: grid;
+  min-height: 0;
 }
 
 #appointments-field {

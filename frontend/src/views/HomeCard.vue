@@ -1,6 +1,6 @@
 <template>
   <div class="home">
-    <div class="login-content">
+    <div class="home-content">
       <h1 id="card-headline" class="p-component">
         {{ currentTranslation.loginCardTitle }}
       </h1>
@@ -70,6 +70,7 @@ export default defineComponent({
   max-width: 600px;
   max-height: min(calc(100vh - 200px), 700px);
   margin: 0 auto;
+  display: flex;
 }
 
 #card-headline {
@@ -90,6 +91,7 @@ export default defineComponent({
 .center-card.p-card > .p-card-body,
 .center-card.p-card > .p-card-body > .p-card-content {
   padding-top: 1px;
+  display: flex;
 }
 
 .label-with-info {

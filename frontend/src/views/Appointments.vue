@@ -146,6 +146,7 @@ export default defineComponent({
 <style scoped>
 .appointments {
   height: 100%;
+  display: grid;
 }
 </style>
 
