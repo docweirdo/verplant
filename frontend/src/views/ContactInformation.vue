@@ -34,12 +34,12 @@
         <InputText
         id="first-name"
         type="text"
-        v-model="firstname"
+        v-model="store.contactInformations.firstname"
         />
         <InputText
             id="last-name"
             type="text"
-            v-model="lastname"
+            v-model="store.contactInformations.lastname"
         />
     </div>
     <div class="contact-1">
@@ -56,51 +56,53 @@
         <InputText
         id="mail"
         type="email"
-        v-model="email"
+        v-model="store.contactInformations.email"
         />
         <InputText
         id="phone"
         type="tel"
-        v-model="phone"
+        v-model="store.contactInformations.phone"
         />
     </div>
     <div class="school-infos">
         <div class="label-with-info">
-            <label for="mail">{{ currentTranslation.organisation}}</label>
+            <label for="organisation">{{ currentTranslation.organisation}}</label>
             <i class="pi pi-envelope info-icon" />
         </div>
         <div class="label-with-info">
-            <label for="phone">{{ currentTranslation.class }}</label>
+            <label for="class">{{ currentTranslation.class }}</label>
             <i class="pi pi-phone info-icon" />
         </div>
         
         
         <InputText
-        id="mail"
-        type="email"
-        v-model="email"
+        id="organisation"
+        type="text"
+        v-model="store.contactInformations.organisation"
         />
         <InputText
-        id="phone"
-        type="tel"
-        v-model="phone"
+        id="class"
+        type="text"
+        v-model="store.contactInformations.class"
         />
     </div>
     
     <div class="p-field-checkbox">
-            <Checkbox id="legalNotice" v-model="acceptedLegalNotice" :binary="true" />
-            <label for="legalNotice">{{currentTranslation.legalNotice}}.</label>
-        </div>
+        <Checkbox id="legalNotice" v-model="store.contactInformations.acceptedLegalNotice" :binary="true" />
+        <label for="legalNotice" v-html="currentTranslation.legalNotice"></label>
+    </div>
     <InfoDialog ref="infoDialog" />
+    <p>* {{ currentTranslation.mandatoryField }}</p>
   </div>
 </template>
 
 <script lang="ts">
 // Foreign stuff
-import { defineComponent, ref } from "vue";
+import { computed, defineComponent, ref } from "vue";
 
 // Our stuff
 import { api, Course, AppointmentSuggestion, AppointmentStatus } from "@/api";
+import store from "@/store";
 import { currentTranslation } from "@/translations";
 
 // Foreign components
@@ -123,12 +125,7 @@ export default defineComponent({
 
 
   async setup() {
-    const firstname = ref("");
-    const lastname = ref("");
-    const email = ref("");
-    const phone = ref("");
-    const organisation = ref("");
-    const group = ref("");
+
 
         const apiResult = await api.getCourses();
             const selectedCourse = ref(null);
@@ -156,13 +153,8 @@ export default defineComponent({
 
     return {
       currentTranslation,
-        firstname,
-        lastname,
-        email,
-        phone,
-        organisation,
-        group,
-              groupedCourses,
+      store,
+      groupedCourses,
       selectedCourse,
       infoDialog
     };
@@ -198,6 +190,14 @@ hr {
     border: none;
     border-top: solid 0.1em black;
 
+}
+
+.p-field-checkbox {
+  margin-top: 0.5em;
+}
+
+.p-field-checkbox > label {
+  margin-left: 0.5em;
 }
 
 </style>

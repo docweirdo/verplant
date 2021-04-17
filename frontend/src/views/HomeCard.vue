@@ -19,6 +19,7 @@
         />
         <Button
           :label="buttonLabel"
+          :disabled="!allMandatoryFilled"
           class="card-switch-button"
           @click="nextPageOrSend"
           :icon="loading ? 'pi pi-spin pi-spinner' : ''"
@@ -35,6 +36,7 @@ import { computed, defineComponent, ref } from "vue";
 
 // Our stuff
 import { api, Course } from "@/api";
+import store from "@/store";
 import { currentTranslation } from "@/translations";
 import router from "@/router";
 
@@ -97,6 +99,14 @@ export default defineComponent({
 
     window.addEventListener("popstate", popStateEventListener);
 
+    const allMandatoryFilled = computed(() => {
+      return store.contactInformations.firstname.length > 1 
+      && store.contactInformations.lastname.length > 1 
+      && store.contactInformations.email.length > 1 
+      && store.contactInformations.email.includes("@") // TODO: replace with regex for mails
+      && store.contactInformations.acceptedLegalNotice
+    });
+
     return {
       site,
       buttonLabel,
@@ -104,6 +114,7 @@ export default defineComponent({
       loading,
       currentTranslation,
       history,
+      allMandatoryFilled
     };
   },
 });
@@ -165,6 +176,10 @@ export default defineComponent({
 .card-switch-button.loading:enabled:hover,
 .card-switch-button.loading:enabled:focus {
   width: 50px;
+}
+
+.card-switch-button:disabled {
+  background-color: #5f5f5f !important;
 }
 </style>
 
