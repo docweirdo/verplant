@@ -4,7 +4,6 @@
   </Suspense>
 </template>
 
-
 <style>
 body {
   margin: 0;

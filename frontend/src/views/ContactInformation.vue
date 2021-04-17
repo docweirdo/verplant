@@ -1,6 +1,6 @@
 <template>
   <div class="contact-infos">
-      <div class="label-with-info">
+    <div class="label-with-info">
       <label>{{ currentTranslation.course }}</label>
       <i
         class="pi pi-question-circle info-icon"
@@ -21,78 +21,80 @@
       v-bind:placeholder="currentTranslation.selectedCoursePlaceholder"
       v-bind:filter="true"
     />
-    <hr>
+    <hr />
     <div class="names">
-        <div class="label-with-info">
-            <label for="first-name">{{ currentTranslation.firstname }}*</label>
-            <i id="user-icon" class="pi pi-user info-icon" />
-        </div>
-        <div class="label-with-info">
-            <label for="last-name">{{ currentTranslation.lastname }}*</label>
-            <i class="pi pi-id-card info-icon" />
-        </div>
-        <InputText
+      <div class="label-with-info">
+        <label for="first-name">{{ currentTranslation.firstname }}*</label>
+        <i id="user-icon" class="pi pi-user info-icon" />
+      </div>
+      <div class="label-with-info">
+        <label for="last-name">{{ currentTranslation.lastname }}*</label>
+        <i class="pi pi-id-card info-icon" />
+      </div>
+      <InputText
         id="first-name"
         type="text"
         v-model="store.contactInformations.firstname"
-        />
-        <InputText
-            id="last-name"
-            type="text"
-            v-model="store.contactInformations.lastname"
-        />
+      />
+      <InputText
+        id="last-name"
+        type="text"
+        v-model="store.contactInformations.lastname"
+      />
     </div>
     <div class="contact-1">
-        <div class="label-with-info">
-            <label for="mail">{{ currentTranslation.email }}*</label>
-            <i class="pi pi-envelope info-icon" />
-        </div>
-        <div class="label-with-info">
-            <label for="phone">{{ currentTranslation.phone }}</label>
-            <i class="pi pi-phone info-icon" />
-        </div>
-        
-        
-        <InputText
+      <div class="label-with-info">
+        <label for="mail">{{ currentTranslation.email }}*</label>
+        <i class="pi pi-envelope info-icon" />
+      </div>
+      <div class="label-with-info">
+        <label for="phone">{{ currentTranslation.phone }}</label>
+        <i class="pi pi-phone info-icon" />
+      </div>
+
+      <InputText
         id="mail"
         type="email"
         v-model="store.contactInformations.email"
-        />
-        <InputText
+      />
+      <InputText
         id="phone"
         type="tel"
         v-model="store.contactInformations.phone"
-        />
+      />
     </div>
     <div class="school-infos">
-        <div class="label-with-info">
-            <label for="organisation">{{ currentTranslation.organisation}}</label>
-            <i class="pi pi-envelope info-icon" />
-        </div>
-        <div class="label-with-info">
-            <label for="class">{{ currentTranslation.class }}</label>
-            <i class="pi pi-phone info-icon" />
-        </div>
-        
-        
-        <InputText
+      <div class="label-with-info">
+        <label for="organisation">{{ currentTranslation.organisation }}</label>
+        <i class="pi pi-globe info-icon" />
+      </div>
+      <div class="label-with-info">
+        <label for="group">{{ currentTranslation.class }}</label>
+        <i class="pi pi-users info-icon" />
+      </div>
+
+      <InputText
         id="organisation"
         type="text"
         v-model="store.contactInformations.organisation"
-        />
-        <InputText
-        id="class"
+      />
+      <InputText
+        id="group"
         type="text"
         v-model="store.contactInformations.class"
-        />
-    </div>
-    
-    <div class="p-field-checkbox">
-        <Checkbox id="legalNotice" v-model="store.contactInformations.acceptedLegalNotice" :binary="true" />
-        <label for="legalNotice" v-html="currentTranslation.legalNotice"></label>
+      />
     </div>
     <InfoDialog ref="infoDialog" />
     <p>* {{ currentTranslation.mandatoryField }}</p>
+    <hr />
+    <div class="p-field-checkbox">
+      <Checkbox
+        id="legalNotice"
+        v-model="store.contactInformations.acceptedLegalNotice"
+        :binary="true"
+      />
+      <label for="legalNotice" v-html="currentTranslation.legalNotice"></label>
+    </div>
   </div>
 </template>
 
@@ -106,10 +108,9 @@ import store from "@/store";
 import { currentTranslation } from "@/translations";
 
 // Foreign components
-import InputText from 'primevue/inputtext';
+import InputText from "primevue/inputtext";
 import Dropdown from "primevue/dropdown";
-import Checkbox from 'primevue/checkbox';
-
+import Checkbox from "primevue/checkbox";
 
 // Our Components
 import InfoDialog from "@/components/InfoDialog.vue";
@@ -120,19 +121,15 @@ export default defineComponent({
     InfoDialog,
     InputText,
     Dropdown,
-    Checkbox
+    Checkbox,
   },
 
-
   async setup() {
-
-
-        const apiResult = await api.getCourses();
-            const selectedCourse = ref(null);
-            const infoDialog = ref(null);
+    const apiResult = await api.getCourses();
+    const selectedCourse = ref(null);
+    const infoDialog = ref(null);
 
     const courseTypes: Map<string, Course[]> = new Map();
-
 
     // Split courses after types
     for (const result of apiResult) {
@@ -156,50 +153,59 @@ export default defineComponent({
       store,
       groupedCourses,
       selectedCourse,
-      infoDialog
+      infoDialog,
     };
   },
 });
 </script>
 
 <style scoped>
-
 .contact-infos {
-    width: 100%;
+  width: 100%;
+  display: grid;
+  grid-template-rows: repeat(6, min-content) auto repeat(2, min-content);
 }
 
-.names, .contact-1, .school-infos {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    column-gap: 0.5em;
+.names,
+.contact-1,
+.school-infos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 0.5em;
 }
 
 .info-icon {
-    cursor: unset;
+  cursor: unset;
 }
 
-#user-icon{
-    font-size: 0.8rem;
-    padding: 0.1rem;
-    border-radius: 50%;
-    border: 0.1rem solid black;
+#user-icon {
+  font-size: 0.8rem;
+  padding: 0.1rem;
+  border-radius: 50%;
+  border: 0.1rem solid black;
 }
 
 hr {
-    margin: 0.8em 0 0 0;
-    border: none;
-    border-top: solid 0.1em black;
+  margin: 0.8em 0 0 0;
+  border: none;
+  border-bottom: solid 0.1em black;
+}
 
+p {
+  margin: 0.5em 0 0 0;
+  align-self: end;
 }
 
 .p-field-checkbox {
-  margin-top: 0.5em;
+  margin: 0.9em 0;
 }
+
+
+
 
 .p-field-checkbox > label {
   margin-left: 0.5em;
 }
-
 </style>
 
 <style>

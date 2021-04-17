@@ -196,7 +196,8 @@ export default defineComponent({
 </style>
 
 <style>
-.login-card .p-card-body, .login-card .p-card-content{
+.login-card .p-card-body,
+.login-card .p-card-content {
   padding-top: 0px;
   padding-bottom: 8px;
 }

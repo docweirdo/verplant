@@ -55,10 +55,12 @@ export default defineComponent({
     Card,
     Button,
     Appointments,
-    ContactInformation
+    ContactInformation,
   },
   setup() {
-    const site = ref(0);
+    const site = ref(1);
+
+
     const loading = ref(false);
 
     const buttonLabel = computed(() => {
@@ -90,7 +92,7 @@ export default defineComponent({
       console.log("popState Event fired", event);
       if (site.value == 1) {
         site.value = 0;
-      } else if (event.state === 'fakePush' && site.value == 0){
+      } else if (event.state === "fakePush" && site.value == 0) {
         site.value = 1;
       } else {
         window.removeEventListener("popstate", popStateEventListener);
@@ -100,11 +102,13 @@ export default defineComponent({
     window.addEventListener("popstate", popStateEventListener);
 
     const allMandatoryFilled = computed(() => {
-      return store.contactInformations.firstname.length > 1 
-      && store.contactInformations.lastname.length > 1 
-      && store.contactInformations.email.length > 1 
-      && store.contactInformations.email.includes("@") // TODO: replace with regex for mails
-      && store.contactInformations.acceptedLegalNotice
+      return (
+        store.contactInformations.firstname.length > 1 &&
+        store.contactInformations.lastname.length > 1 &&
+        store.contactInformations.email.length > 1 &&
+        store.contactInformations.email.includes("@") && // TODO: replace with regex for mails
+        store.contactInformations.acceptedLegalNotice
+      );
     });
 
     return {
@@ -114,7 +118,7 @@ export default defineComponent({
       loading,
       currentTranslation,
       history,
-      allMandatoryFilled
+      allMandatoryFilled,
     };
   },
 });
@@ -146,7 +150,7 @@ export default defineComponent({
 }
 
 @media only screen and (max-height: 700px) {
-  .center-card{
+  .center-card {
     min-height: calc(100vh - 12em);
     height: unset;
   }
@@ -214,5 +218,4 @@ export default defineComponent({
   margin-left: 5px;
   cursor: pointer;
 }
-
 </style>

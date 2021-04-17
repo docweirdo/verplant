@@ -70,8 +70,6 @@ export default defineComponent({
     const infoDialog = ref(null);
     const displayAppointmentPicker = ref(false);
 
-
-
     const rawAppointments = await api.getAppointments("abcde"); // TODO: Booking ID Logic
     console.log(rawAppointments);
     const appointments = ref([...rawAppointments]);
@@ -105,4 +103,3 @@ export default defineComponent({
   flex-direction: column;
 }
 </style>
-

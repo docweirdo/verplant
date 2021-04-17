@@ -32,7 +32,8 @@ export const currentTranslation = {
   date: "Datum",
   startTime: "Startzeit",
   endTime: "Ende",
-  legalNotice: 'Ich habe die <a href="">AGB</a> und <a href="">Datenschutzbestimmungen</a> akzeptiert.',
+  legalNotice:
+    'Ich habe die <a href="/legal/ToS" target="_blank">AGB</a> und <a href="/legal/DataPolicy" target="_blank">Datenschutzbestimmungen</a> akzeptiert.',
   mandatoryField: "Pflichtfeld",
   information: {
     courseSelection: `Mithilfe dieses Dropdownmenüs können Sie den Kurs auswählen, den Sie gerne buchen möchten.
