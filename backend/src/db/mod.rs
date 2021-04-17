@@ -73,6 +73,8 @@ pub enum DatabaseError {
     PasswordMatch,
     #[error("Ambiguous result, too many entries")]
     Ambiguous,
+    #[error("Update invalid, unallowed changes or inconsistent data")]
+    Invalid
 }
 
 /// This function maps Diesels not found error to our NoEntry error for easier matching
@@ -117,13 +119,9 @@ pub fn get_booking_appointments_from_url(
     let appointments_vec: Vec<Appointment> = books
         .filter(url.eq(booking_url))
         .inner_join(appointments.on(schema::appointments::books_id.eq(schema::books::id)))
-        .select((
-            schema::appointments::id,
-            schema::appointments::start_time,
-            schema::appointments::end_time,
-            schema::appointments::state,
-            schema::appointments::proposer_id,
-        ))
+        .select(
+            schema::appointments::all_columns
+        )
         .load::<Appointment>(&conn.0)
         .map_err(diesel_to_no_entry)?;
 
@@ -154,8 +152,8 @@ pub fn add_appointments(conn: &DBConn, booking_url : &str, mut appointment_list 
 
         let appt = appointment_list.drain(..).map(|sug| {
             NewAppointment {
-                start_time: sug.starttime,
-                end_time: sug.endtime,
+                start_time: sug.start_time,
+                end_time: sug.end_time,
                 state: String::from("SUGGESTED"),
                 proposer_id: provider.unwrap_or(customer),
                 books_id: booking_id,
@@ -166,6 +164,41 @@ pub fn add_appointments(conn: &DBConn, booking_url : &str, mut appointment_list 
         for a in appt {
             insert_into(appointments).values(a).execute(&conn.0).map_err(diesel_to_no_entry)?;
         }
+        Ok(())
+    })
+
+}
+
+pub fn update_appointments(conn: &DBConn, booking_url : &str, mut appointment_list : Vec<Appointment>, provider: Option<i32>) -> Result<(), DatabaseError>{
+
+    conn.transaction(move || {
+
+        let (customer, booking_id): (i32, i32) = match books
+        .filter(url.eq(booking_url))
+        .select((customer_id, schema::books::id))
+        .load::<(i32, i32)>(&conn.0) {
+            Ok(v) if v.len() == 0 => return Err(DatabaseError::NoEntry),
+            Ok(v) if v.len() > 1 => return Err(DatabaseError::Ambiguous),
+            Ok(mut v) => v.remove(0),
+            Err(e) => return Err(e.into())
+        };
+
+        for updated_appointment in appointment_list {
+
+            let old_appointment : Appointment = match appointments.find(updated_appointment.id).load::<Appointment>(&conn.0).map_err(diesel_to_no_entry) {
+                Ok(mut v) => v.remove(0),
+                Err(e) => return Err(e.into())
+            };
+
+            // Decide what changes to allow here 
+            // For example room id or state, the former only when provider is Some(), the later if state change is logical
+            // Check if other fields are changed
+            // Check if proposer_id matches provider or if provider is None then make sure proposer_id is not a provider
+            // Write Changed entry back if all checks out
+        }
+        
+
+
         Ok(())
     })
 

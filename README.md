@@ -41,3 +41,4 @@ The name of the project is german for: someone or something being planned (out) 
 - Build fake history when accessing booking URL directly for back button
 - Check out wether transactions are necessary everywhere
 - Backend: set cookie same-site attribute to strict/lax
+- Backend: take a hard look at db::new_appointments (filtering)

@@ -1,5 +1,5 @@
 use crate::db::schema::*;
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 
 
 #[derive(Queryable, Debug, Insertable, Serialize, Identifiable, Associations)]
@@ -33,17 +33,18 @@ pub struct Provider {
     pub is_admin: bool,
 }
 
-#[derive(Queryable, Debug, Serialize, Identifiable, Associations)]
+#[derive(Queryable, Insertable, Debug, Serialize, Deserialize,  Identifiable, Associations)]
 #[table_name="appointments"]
 #[belongs_to(Person, foreign_key = "proposer_id")]
 #[primary_key(id)]
 pub struct Appointment {
     pub id: i32,
-    pub starttime: String,
-    pub endtime: String,
-    pub status: String,
-    pub proposer_id: i32
-    // sTODO: some fields are missing
+    pub start_time: String,
+    pub end_time: String,
+    pub books_id: i32,
+    pub proposer_id: i32,
+    pub room_id: i32, 
+    pub state: String
 }
 
 #[derive(Queryable, Debug, Serialize, Identifiable, Associations)]

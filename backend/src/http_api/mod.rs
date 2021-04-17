@@ -100,8 +100,8 @@ pub fn get_booking_appointments(provider: Option<ProviderGuard>, booking_url : S
     let our_id: i32 = provider.map(|p| p.person_id).unwrap_or(person_id);
 
     for appointment in appointments.iter_mut() {
-        if appointment.proposer_id == our_id && status_suggested.eq(&appointment.status){
-            appointment.status = String::from("PENDING");
+        if appointment.proposer_id == our_id && status_suggested.eq(&appointment.state){
+            appointment.state = String::from("PENDING");
         }
     }
 
@@ -111,17 +111,17 @@ pub fn get_booking_appointments(provider: Option<ProviderGuard>, booking_url : S
 #[derive(Deserialize, Debug)]
 pub struct AppointmentSuggestion {
     pub date: String, 
-    pub starttime: String,
-    pub endtime: String,
+    pub start_time: String,
+    pub end_time: String,
     pub room_id: Option<i32>
 }
 
-#[post("/bookings/<booking_url>", data = "<appointments>")]
-pub fn add_appointments(provider: Option<ProviderGuard>, conn: DBConn, booking_url : String, appointments: Json<Vec<AppointmentSuggestion>>) -> Result<(), Status> {
+#[post("/bookings/<booking_url>", data = "<new_appointments>")]
+pub fn add_appointments(provider: Option<ProviderGuard>, conn: DBConn, booking_url : String, new_appointments: Json<Vec<AppointmentSuggestion>>) -> Result<(), Status> {
     
-    info!(target: "/bookings/<booking_url>", "booking url {} appointments suggested", booking_url);
+    info!(target: "POST /bookings/<booking_url>", "booking url {} appointments suggested", booking_url);
 
-     match db::add_appointments(&conn, &booking_url, appointments.0, provider.map(|p| p.person_id)){
+     match db::add_appointments(&conn, &booking_url, new_appointments.0, provider.map(|p| p.person_id)){
         Ok(_) => Ok(()),
         Err(DatabaseError::DieselError(e)) => {
             error!(target: "/bookings/<booking_url>", "add_appointments database error for url {}: {}", booking_url, e);
@@ -143,5 +143,36 @@ pub fn add_appointments(provider: Option<ProviderGuard>, conn: DBConn, booking_u
     }
 }
 
+#[patch("/bookings/<booking_url>", data = "<updated_appointments>")]
+pub fn update_appointments(provider: Option<ProviderGuard>, conn: DBConn, booking_url : String, updated_appointments: Json<Vec<Appointment>>) -> Result<(), Status> {
+    
+    info!(target: "PATCH /bookings/<booking_url>", "booking url {} appointments modification suggested", booking_url);
+
+     match db::update_appointments(&conn, &booking_url, updated_appointments.0, provider.map(|p| p.person_id)){
+        Ok(_) => Ok(()),
+        // Special Error Handling
+        Err(e) => {
+            warn!(target: "PATCH /bookings/<booking_url>", "update_appointments undefined error for url {}: {}", booking_url, e);
+            Err(Status::InternalServerError)
+        },
+
+    }
+}
+
+#[delete("/bookings/<booking_url>", data = "<withdrawn_appointments>")]
+pub fn withdraw_appointments(provider: Option<ProviderGuard>, conn: DBConn, booking_url : String, withdrawn_appointments: Json<Vec<Appointment>>) -> Result<(), Status> {
+    
+    info!(target: "DELETE /bookings/<booking_url>", "booking url {} appointments withdrawal suggested", booking_url);
+
+     match db::withdraw_appointments(&conn, &booking_url, withdrawn_appointments.0, provider.map(|p| p.person_id)){
+        Ok(_) => Ok(()),
+        // Special Error Handling
+        Err(e) => {
+            warn!(target: "DELETE /bookings/<booking_url>", "withdraw_appointments undefined error for url {}: {}", booking_url, e);
+            Err(Status::InternalServerError)
+        },
+
+    }
+}
 
 
