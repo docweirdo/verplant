@@ -6,7 +6,12 @@ export const currentTranslation = {
   miscCourseType: "Andere",
   course: "Kurs",
   info: "Info",
+  firstname: "Vorname",
+  lastname: "Nachname",
   email: "Email",
+  phone: "Telefon",
+  organisation: "Organisation",
+  class: "Klasse / Kurs",
   password: "Passwort",
   login: "Einloggen",
   loginError: "Email oder Passwort sind falsch",
@@ -27,6 +32,7 @@ export const currentTranslation = {
   date: "Datum",
   startTime: "Startzeit",
   endTime: "Ende",
+  legalNotice: "Ich habe die AGB und Datenschutzbestimmungen akzeptiert", 
   information: {
     courseSelection: `Mithilfe dieses Dropdownmenüs können Sie den Kurs auswählen, den Sie gerne buchen möchten.
         Wenn Sie vorhaben, mehrere Kurse zu buchen, starten Sie bitte für jeden Kurs einen separaten Buchungsvorgang.`,

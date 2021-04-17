@@ -4,7 +4,7 @@
       <h1 id="card-headline" class="p-component">
         {{ currentTranslation.loginCardTitle }}
       </h1>
-      <Card class="center-card">
+      <Card class="login-card">
         <template #content>
           <div class="login-fields">
             <template v-if="error">
@@ -196,7 +196,8 @@ export default defineComponent({
 </style>
 
 <style>
-.center-card .p-card-body {
+.login-card .p-card-body, .login-card .p-card-content{
+  padding-top: 0px;
   padding-bottom: 8px;
 }
 </style>

@@ -6,7 +6,7 @@
       </h1>
       <Card class="center-card">
         <template #content>
-          <div class="placeholder" v-if="site == 0">SEITE 1</div>
+          <ContactInformation v-if="site == 0" />
           <Appointments v-else-if="site == 1" />
         </template>
       </Card>
@@ -44,6 +44,7 @@ import Button from "primevue/button";
 
 // Our Components
 import Appointments from "@/views/Appointments.vue";
+import ContactInformation from "@/views/ContactInformation.vue";
 import { onBeforeRouteLeave } from "vue-router";
 
 export default defineComponent({
@@ -52,6 +53,7 @@ export default defineComponent({
     Card,
     Button,
     Appointments,
+    ContactInformation
   },
   setup() {
     const site = ref(0);
@@ -86,6 +88,8 @@ export default defineComponent({
       console.log("popState Event fired", event);
       if (site.value == 1) {
         site.value = 0;
+      } else if (event.state === 'fakePush' && site.value == 0){
+        site.value = 1;
       } else {
         window.removeEventListener("popstate", popStateEventListener);
       }
@@ -131,6 +135,11 @@ export default defineComponent({
 }
 
 @media only screen and (max-height: 700px) {
+  .center-card{
+    min-height: calc(100vh - 12em);
+    height: unset;
+  }
+
   #card-headline {
     font-size: 1.2em;
   }
@@ -138,6 +147,7 @@ export default defineComponent({
 
 .card-switch-container {
   margin-top: 0.5em;
+  margin-bottom: 2em;
   display: flex;
   justify-content: space-between;
 }
@@ -162,7 +172,9 @@ export default defineComponent({
 .center-card.p-card > .p-card-body,
 .center-card.p-card > .p-card-body > .p-card-content {
   padding-top: 1px;
+  padding-bottom: 1px;
   display: flex;
+  width: 100%;
 }
 
 .label-with-info {
@@ -187,4 +199,5 @@ export default defineComponent({
   margin-left: 5px;
   cursor: pointer;
 }
+
 </style>

@@ -1,26 +1,5 @@
 <template>
   <div class="appointments">
-    <div class="label-with-info">
-      <label>{{ currentTranslation.course }}</label>
-      <i
-        class="pi pi-question-circle info-icon"
-        v-on:click="
-          infoDialog.displayInfoDialog(
-            currentTranslation.course,
-            currentTranslation.information.courseSelection
-          )
-        "
-      />
-    </div>
-    <Dropdown
-      v-model="selectedCourse"
-      v-bind:options="groupedCourses"
-      optionLabel="name"
-      optionGroupLabel="groupType"
-      optionGroupChildren="courses"
-      v-bind:placeholder="currentTranslation.selectedCoursePlaceholder"
-      v-bind:filter="true"
-    />
     <div id="infodiv-appoinmentList" class="label-with-info">
       <label>{{ currentTranslation.appointmentSuggestions }}</label>
       <i
@@ -70,8 +49,6 @@ import { api, Course, AppointmentSuggestion, AppointmentStatus } from "@/api";
 import { currentTranslation } from "@/translations";
 
 // Foreign Components
-import Card from "primevue/card";
-import Dropdown from "primevue/dropdown";
 import Dialog from "primevue/dialog";
 import Button from "primevue/button";
 
@@ -83,7 +60,6 @@ import AppointmentPicker from "@/components/AppointmentPicker.vue";
 export default defineComponent({
   name: "Appointments",
   components: {
-    Dropdown,
     InfoDialog,
     AppointmentList,
     Dialog,
@@ -91,30 +67,10 @@ export default defineComponent({
     Button,
   },
   async setup() {
-    const selectedCourse = ref(null);
     const infoDialog = ref(null);
     const displayAppointmentPicker = ref(false);
 
-    const apiResult = await api.getCourses();
 
-    const courseTypes: Map<string, Course[]> = new Map();
-
-    // Split courses after types
-    for (const result of apiResult) {
-      const cType = result.course_type ?? currentTranslation.miscCourseType;
-      const c = courseTypes.get(cType);
-      if (c) c.push(result);
-      else courseTypes.set(cType, [result]);
-    }
-
-    const groupedCourses: { courses: Course[]; groupType: string }[] = [];
-
-    for (const [key, value] of courseTypes.entries()) {
-      groupedCourses.push({
-        groupType: key,
-        courses: value,
-      });
-    }
 
     const rawAppointments = await api.getAppointments("abcde"); // TODO: Booking ID Logic
     console.log(rawAppointments);
@@ -133,8 +89,6 @@ export default defineComponent({
     return {
       appointments,
       currentTranslation,
-      groupedCourses,
-      selectedCourse,
       infoDialog,
       displayAppointmentPicker,
       createAppointment,
@@ -146,17 +100,9 @@ export default defineComponent({
 <style scoped>
 .appointments {
   height: 100%;
-  display: grid;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 </style>
 
-
-<style>
-.p-dropdown-item {
-  padding-left: 30px !important;
-}
-.p-dropdown-item-group {
-  color: var(--text-color) !important;
-  font-weight: bold !important;
-}
-</style>

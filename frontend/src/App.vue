@@ -16,6 +16,10 @@ body {
   background-size: 100%;
 }
 
+.info-dialog {
+  display: none;
+}
+
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;

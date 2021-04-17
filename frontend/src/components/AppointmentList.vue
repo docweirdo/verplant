@@ -207,6 +207,8 @@ export default defineComponent({
 .appointment-list {
   display: grid;
   min-height: 0;
+  height: 100%;
+  grid-template-rows: auto min-content min-content min-content;
 }
 
 #appointments-field {
@@ -218,6 +220,7 @@ export default defineComponent({
   #appointments-field {
     height: unset;
     max-height: unset;
+    overflow-y: unset;
   }
 }
 
@@ -316,6 +319,7 @@ label[for="filters"] {
 #filters {
   display: flex;
   gap: 0.3em;
+  margin-bottom: 0.5em;
 }
 
 #filters .p-button {
