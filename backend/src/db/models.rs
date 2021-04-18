@@ -33,7 +33,7 @@ pub struct Provider {
     pub is_admin: bool,
 }
 
-#[derive(Queryable, Insertable, Debug, Serialize, Deserialize,  Identifiable, Associations)]
+#[derive(Queryable, Insertable, Debug, Serialize, Deserialize, Identifiable, Associations, AsChangeset)]
 #[table_name="appointments"]
 #[belongs_to(Person, foreign_key = "proposer_id")]
 #[primary_key(id)]

@@ -56,7 +56,7 @@ pub fn login(mut cookies: Cookies, credentials: Json<Credentials>, conn: DBConn)
         }
         Err(e) => {
             warn!(target: "/login", "undefined error for email {}: {}", email, e);
-            return Status::Unauthorized;
+            return Status::InternalServerError;
         }
     };
 
@@ -79,10 +79,11 @@ pub fn login(mut cookies: Cookies, credentials: Json<Credentials>, conn: DBConn)
         return Status::InternalServerError;
     };
 
+    //TODO: Set secure only
     cookies.add(
         Cookie::build("jwt", token)
             .http_only(true)
-            .max_age(Duration::seconds(COOKIE_DURATION as i64)) //TODO: Set secure only
+            .permanent()
             .path("/")
             .finish(),
     );
@@ -112,13 +113,23 @@ impl<'a, 'r> FromRequest<'a, 'r> for ProviderGuard {
             return Outcome::Forward(());
         };
         info!("{:?}", cookies);
+
+        let mut custom_validation = Validation::default();
+        custom_validation.validate_exp = false;
+
         let user_id: i32 = if let Some(cookie) = cookies.get("jwt") {
             if let Ok(token_data) = decode::<JWTClaims>(
                 cookie.value(),
                 &DecodingKey::from_secret("secret".as_ref()),
-                &Validation::default(),
+                &custom_validation,
             ) {
-                token_data.claims.id
+                let now: u64 = SystemTime::UNIX_EPOCH.elapsed().unwrap().as_secs();
+                if token_data.claims.exp < now{
+                    token_data.claims.id
+                } else {
+                    return Outcome::Failure((Status::Unauthorized, ()));
+                }
+                
             } else {
                 warn!(target: "ProviderGuard", "JWT decode failed");
                 return Outcome::Forward(());

@@ -42,3 +42,7 @@ The name of the project is german for: someone or something being planned (out) 
 - Check out wether transactions are necessary everywhere
 - Backend: set cookie same-site attribute to strict/lax
 - Backend: take a hard look at db::new_appointments (filtering)
+- Backend: Validate date/times before storing in db (add_appointments)
+- Backend: return 403 when Provider Guard didn't match and NO other andpoint matches (so don't return Failure but overwrite 404 catcher)
+- Backend: Cookie exp check is wrong
+- General: Think about what admins should be able to do and adjust endpoints accordingly, also update Status Repsonse from BadRequest to Forbidden if needed

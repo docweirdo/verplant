@@ -22,7 +22,8 @@ pub fn mount_endpoints(rocket: Rocket) -> Rocket {
         get_provider_appointments, 
         get_booking_info, 
         get_booking_appointments, 
-        add_appointments])
+        add_appointments,
+        update_appointments])
 }
 
 
@@ -50,7 +51,7 @@ pub fn get_booking_info(
     info!(target: "/bookings/<booking_url>/info", "booking url {} info requested", booking_url);
 
     match db::get_booking_info(&conn, &booking_url) {
-        Ok(course_name) => Ok(json!({ "selectedCourse": course_name })),
+        Ok(course_name) => Ok(json!({ "selectedCourse": course_name })), // TODO: return more
         Err(DatabaseError::DieselError(e)) => {
             error!(target: "/bookings/<booking_url>/info", "get_booking_info database error for url {}: {}", booking_url, e);
             return Err(Status::InternalServerError);
@@ -110,7 +111,6 @@ pub fn get_booking_appointments(provider: Option<ProviderGuard>, booking_url : S
 
 #[derive(Deserialize, Debug)]
 pub struct AppointmentSuggestion {
-    pub date: String, 
     pub start_time: String,
     pub end_time: String,
     pub room_id: Option<i32>
@@ -124,19 +124,19 @@ pub fn add_appointments(provider: Option<ProviderGuard>, conn: DBConn, booking_u
      match db::add_appointments(&conn, &booking_url, new_appointments.0, provider.map(|p| p.person_id)){
         Ok(_) => Ok(()),
         Err(DatabaseError::DieselError(e)) => {
-            error!(target: "/bookings/<booking_url>", "add_appointments database error for url {}: {}", booking_url, e);
+            error!(target: "POST /bookings/<booking_url>", "add_appointments database error for url {}: {}", booking_url, e);
             Err(Status::InternalServerError)
         },
         Err(DatabaseError::Ambiguous) => {
-            error!(target: "/bookings/<booking_url>", "add_appointments multiple entries for url {}: {}", booking_url, DatabaseError::Ambiguous);
+            error!(target: "POST /bookings/<booking_url>", "add_appointments multiple entries for url {}: {}", booking_url, DatabaseError::Ambiguous);
             Err(Status::InternalServerError)
         }
         Err(DatabaseError::NoEntry) => {
-            warn!(target: "/bookings/<booking_url>", "add_appointments no entries for url {}: {}", booking_url, DatabaseError::NoEntry);
+            warn!(target: "POST /bookings/<booking_url>", "add_appointments no entries for url {}: {}", booking_url, DatabaseError::NoEntry);
             Err(Status::NotFound)
         },
         Err(e) => {
-            warn!(target: "/bookings/<booking_url>", "add_appointments undefined error for url {}: {}", booking_url, e);
+            warn!(target: "POST /bookings/<booking_url>", "add_appointments undefined error for url {}: {}", booking_url, e);
             Err(Status::InternalServerError)
         },
 
@@ -150,7 +150,22 @@ pub fn update_appointments(provider: Option<ProviderGuard>, conn: DBConn, bookin
 
      match db::update_appointments(&conn, &booking_url, updated_appointments.0, provider.map(|p| p.person_id)){
         Ok(_) => Ok(()),
-        // Special Error Handling
+        Err(DatabaseError::DieselError(e)) => {
+            error!(target: "PATCH /bookings/<booking_url>", "update_appointments database error for url {}: {}", booking_url, e);
+            Err(Status::InternalServerError)
+        },
+        Err(DatabaseError::Ambiguous) => {
+            error!(target: "PATCH /bookings/<booking_url>", "update_appointments multiple entries for url {}: {}", booking_url, DatabaseError::Ambiguous);
+            Err(Status::InternalServerError)
+        }
+        Err(DatabaseError::NoEntry) => {
+            warn!(target: "PATCH /bookings/<booking_url>", "update_appointments no entries for url {}: {}", booking_url, DatabaseError::NoEntry);
+            Err(Status::NotFound)
+        },
+        Err(DatabaseError::InvalidChange) => {
+            warn!(target: "PATCH /bookings/<booking_url>", "update_appointments requested invalid change for url {}: {}", booking_url, DatabaseError::NoEntry);
+            Err(Status::BadRequest)
+        }
         Err(e) => {
             warn!(target: "PATCH /bookings/<booking_url>", "update_appointments undefined error for url {}: {}", booking_url, e);
             Err(Status::InternalServerError)
@@ -159,6 +174,7 @@ pub fn update_appointments(provider: Option<ProviderGuard>, conn: DBConn, bookin
     }
 }
 
+/* 
 #[delete("/bookings/<booking_url>", data = "<withdrawn_appointments>")]
 pub fn withdraw_appointments(provider: Option<ProviderGuard>, conn: DBConn, booking_url : String, withdrawn_appointments: Json<Vec<Appointment>>) -> Result<(), Status> {
     
@@ -173,6 +189,6 @@ pub fn withdraw_appointments(provider: Option<ProviderGuard>, conn: DBConn, book
         },
 
     }
-}
+} */
 
 
