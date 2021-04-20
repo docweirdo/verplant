@@ -6,7 +6,7 @@
       </h1>
       <Card class="center-card">
         <template #content>
-          <transition>
+          <transition name="slide" appear>
             <ContactInformation v-if="site == 0" />
             <Appointments v-else-if="site == 1" />
           </transition>
@@ -174,6 +174,7 @@ export default defineComponent({
   height: min(calc(100vh - 200px), 700px);
   margin: 0 auto;
   display: flex;
+  overflow: hidden;
 }
 
 #card-headline {
@@ -219,6 +220,24 @@ export default defineComponent({
 .card-switch-button:disabled {
   background-color: #5f5f5f !important;
 }
+
+/* === CARD SLIDE TRANSITION === */
+.slide-enter-active, .slide-leave-active {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  transition: transform 0.5s ease-in-out;
+}
+
+.slide-enter-from {
+  transform: translateX(-100%);
+}
+
+.slide-leave-to {
+  transform: translateX(100%)
+} 
 </style>
 
 <style>
@@ -228,6 +247,8 @@ export default defineComponent({
   padding-bottom: 1px;
   display: flex;
   width: 100%;
+  /* position: absolute of transition is relative to nearest positioned element */
+  position: relative;
 }
 
 .label-with-info {
