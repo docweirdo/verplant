@@ -6,8 +6,10 @@
       </h1>
       <Card class="center-card">
         <template #content>
-          <ContactInformation v-if="site == 0" />
-          <Appointments v-else-if="site == 1" />
+          <transition>
+            <ContactInformation v-if="site == 0" />
+            <Appointments v-else-if="site == 1" />
+          </transition>
         </template>
       </Card>
       <div class="card-switch-container">
@@ -17,14 +19,16 @@
           class="card-switch-button"
           @click="history.back()"
         />
-        <Button
-          :label="buttonLabel"
-          :disabled="!allMandatoryFilled"
-          class="card-switch-button"
-          @click="nextPageOrSend"
-          :icon="loading ? 'pi pi-spin pi-spinner' : ''"
-          :class="{ loading: loading }"
-        />
+        <div class="tooltip-wrapper" v-tooltip.left="missingFieldsTooltipText">
+          <Button
+            :label="buttonLabel"
+            :disabled="!allMandatoryFilled"
+            class="card-switch-button"
+            @click="nextPageOrSend"
+            :icon="loading ? 'pi pi-spin pi-spinner' : ''"
+            :class="{ loading: loading }"
+          />
+        </div>
       </div>
     </div>
   </div>
@@ -43,11 +47,13 @@ import router from "@/router";
 // Foreign Components
 import Card from "primevue/card";
 import Button from "primevue/button";
+import Tooltip from 'primevue/tooltip';
 
 // Our Components
 import Appointments from "@/views/Appointments.vue";
 import ContactInformation from "@/views/ContactInformation.vue";
 import { onBeforeRouteLeave } from "vue-router";
+import { isEmail } from "@/utils";
 
 export default defineComponent({
   name: "HomeCard",
@@ -57,8 +63,11 @@ export default defineComponent({
     Appointments,
     ContactInformation,
   },
+  directives: {
+    "tooltip": Tooltip
+  },
   setup() {
-    const site = ref(1);
+    const site = ref(0);
 
 
     const loading = ref(false);
@@ -88,6 +97,17 @@ export default defineComponent({
       }
     };
 
+    // TODO: remove === SKIP FIRST PAGE ===
+    nextPageOrSend();
+
+    store.contactInformations.firstname = "Max";
+    store.contactInformations.lastname = "Mustermann";
+    store.contactInformations.email = "max.mustermann@gmail.com";
+    store.contactInformations.organisation = "Tolle Schule Berlin";
+    store.contactInformations.acceptedLegalNotice = true;
+
+    // === END SKIP FIRST PAGE ===
+
     const popStateEventListener = (event: PopStateEvent) => {
       console.log("popState Event fired", event);
       if (site.value == 1) {
@@ -103,12 +123,25 @@ export default defineComponent({
 
     const allMandatoryFilled = computed(() => {
       return (
-        store.contactInformations.firstname.length > 1 &&
-        store.contactInformations.lastname.length > 1 &&
-        store.contactInformations.email.length > 1 &&
-        store.contactInformations.email.includes("@") && // TODO: replace with regex for mails
+        store.contactInformations.firstname.length >= 1 &&
+        store.contactInformations.lastname.length >= 1 &&
+        isEmail(store.contactInformations.email) &&
         store.contactInformations.acceptedLegalNotice
       );
+    });
+
+    const missingFieldsTooltipText = computed(() => {
+      if (allMandatoryFilled.value) return "";
+      const missingFields: string[] = [];
+      if (store.contactInformations.firstname.length < 1) missingFields.push(currentTranslation.firstname);
+      if (store.contactInformations.lastname.length < 1) missingFields.push(currentTranslation.lastname);
+      if (!isEmail(store.contactInformations.email)) missingFields.push(currentTranslation.email);
+      if (!store.contactInformations.acceptedLegalNotice) missingFields.push(currentTranslation.legalNoticeShort);
+
+      if (missingFields.length == 1) {
+        return `Feld ${missingFields[0]} fehlt.`; // TODO: allow interpolatable strings in currentTranslation
+      }
+      return `Folgende Felder sind Pflichtfelder: ${missingFields.join(", ")}`
     });
 
     return {
@@ -119,6 +152,7 @@ export default defineComponent({
       currentTranslation,
       history,
       allMandatoryFilled,
+      missingFieldsTooltipText
     };
   },
 });

@@ -21,7 +21,6 @@
 <script lang="ts">
 // Foreign stuff
 import { defineComponent, Ref, ref, computed } from "vue";
-import moment from "moment";
 
 // Our stuff
 import { currentTranslation } from "@/translations";

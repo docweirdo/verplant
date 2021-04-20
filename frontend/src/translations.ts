@@ -32,6 +32,7 @@ export const currentTranslation = {
   date: "Datum",
   startTime: "Startzeit",
   endTime: "Ende",
+  legalNoticeShort: "AGB & Datenschutzbestimmungen",
   legalNotice:
     'Ich habe die <a href="/legal/ToS" target="_blank">AGB</a> und <a href="/legal/DataPolicy" target="_blank">Datenschutzbestimmungen</a> akzeptiert.',
   mandatoryField: "Pflichtfeld",
