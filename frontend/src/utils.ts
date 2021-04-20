@@ -23,3 +23,7 @@ export const addHoursAndMinutes = (
   result.setMinutes(result.getMinutes() + minutes);
   return result;
 };
+
+export function isEmail(mail: string): boolean {
+  return mail.length > 2 && mail.includes("@"); // TODO: use regex
+}

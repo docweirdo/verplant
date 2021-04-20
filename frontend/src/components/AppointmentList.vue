@@ -95,7 +95,6 @@
 <script lang="ts">
 // Foreign stuff
 import { defineComponent, Ref, ref, computed } from "vue";
-import moment from "moment";
 
 // Our stuff
 import { currentTranslation } from "@/translations";
@@ -194,7 +193,6 @@ export default defineComponent({
       filteredAppointments,
       currentTranslation,
       infoDialog,
-      moment,
       filterOptions,
       toDateString: utils.toDateString,
       toTimeString: utils.toTimeString,
