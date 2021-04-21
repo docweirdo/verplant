@@ -6,10 +6,8 @@
       </h1>
       <Card class="center-card">
         <template #content>
-          <transition name="slide" appear>
-            <ContactInformation v-if="site == 0" />
-            <Appointments v-else-if="site == 1" />
-          </transition>
+          <ContactInformation v-if="site == 0" />
+          <Appointments v-else-if="site == 1" />
         </template>
       </Card>
       <div class="card-switch-container">
@@ -220,24 +218,6 @@ export default defineComponent({
 .card-switch-button:disabled {
   background-color: #5f5f5f !important;
 }
-
-/* === CARD SLIDE TRANSITION === */
-.slide-enter-active, .slide-leave-active {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  transition: transform 0.5s ease-in-out;
-}
-
-.slide-enter-from {
-  transform: translateX(-100%);
-}
-
-.slide-leave-to {
-  transform: translateX(100%)
-} 
 </style>
 
 <style>
