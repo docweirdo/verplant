@@ -101,7 +101,7 @@ pub fn get_booking_info(conn: &DBConn, booking_url: &str) -> Result<String, Data
 }
 
 /// loads the appointments and the customer associated with the booking_url
-pub fn get_booking_appointments_from_url(
+pub fn get_booking_appointments_by_url(
     conn: &DBConn,
     booking_url: &str,
 ) -> Result<(Vec<Appointment>, i32), DatabaseError> {
@@ -128,34 +128,85 @@ pub fn get_booking_appointments_from_url(
     Ok((appointments_vec, customer))
 }
 
+/// returns (customer, booking id) on success
+fn get_booking_details(conn: &DBConn, booking_ref: BookingReference) -> Result<(i32, i32), DatabaseError> {
+    
+    let mut query = schema::books::table.into_boxed();
 
-pub fn add_appointments(conn: &DBConn, booking_url : &str, mut appointment_list : Vec<AppointmentSuggestion>, provider: Option<i32>) -> Result<(), DatabaseError>{
+    query = match booking_ref {
+        BookingReference::BookingId(booking_id) => {
+            query
+            .filter(schema::books::id.eq(booking_id))
+        },
+        BookingReference::BookingUrl(booking_url) => {
+            query
+            .filter(url.eq(booking_url))
+        }
+    };
+    
+    
+    
+    let (customer, booking_id): (i32, i32) = match query.select((customer_id, schema::books::id)).load::<(i32, i32)>(&conn.0){
+        Ok(v) if v.len() == 0 => return Err(DatabaseError::NoEntry),
+        Ok(v) if v.len() > 1 => return Err(DatabaseError::Ambiguous),
+        Ok(mut v) => v.remove(0),
+        Err(e) => return Err(e.into())
+    };
+
+
+    return Ok((customer, booking_id));
+}
+
+fn get_default_room_id_by_booking_id(conn: &DBConn, booking_id: i32) -> Result<i32, DatabaseError>{
+    
+    let room : i32 = match books.inner_join(courses.on(schema::courses::id.eq(course_id))).filter(schema::books::id.eq(booking_id)).select(default_room_id).load(&conn.0) {
+        Ok(v) if v.len() == 0 => return Err(DatabaseError::NoEntry),
+        Ok(v) if v.len() > 1 => return Err(DatabaseError::Ambiguous),
+        Ok(mut v) => v.remove(0),
+        Err(e) => return Err(e.into())
+    };
+
+    Ok(room)
+
+}
+
+pub fn add_appointments_by_customer(conn: &DBConn, booking_url : &str, mut appointment_list : Vec<AppointmentSuggestion>) -> Result<(), DatabaseError>{
 
     conn.transaction(move || {
 
-        let (customer, booking_id): (i32, i32) = match books
-        .filter(url.eq(booking_url))
-        .select((customer_id, schema::books::id))
-        .load::<(i32, i32)>(&conn.0) {
-            Ok(v) if v.len() == 0 => return Err(DatabaseError::NoEntry),
-            Ok(v) if v.len() > 1 => return Err(DatabaseError::Ambiguous),
-            Ok(mut v) => v.remove(0),
-            Err(e) => return Err(e.into())
-        };
+        let (customer, booking_id) = get_booking_details(conn, BookingReference::BookingUrl(booking_url))?;
+        let room = get_default_room_id_by_booking_id(conn, booking_id)?;
+        let appt = appointment_list.drain(..).map(|sug| {
+            NewAppointment {
+                start_time: sug.start_time,
+                end_time: sug.end_time,
+                state: String::from("SUGGESTED"),
+                proposer_id: customer,
+                books_id: booking_id,
+                room_id: room
+            }
+        });
 
-        let room : Option<i32> = match books.inner_join(courses.on(schema::courses::id.eq(course_id))).filter(schema::books::id.eq(booking_id)).select(default_room_id).load(&conn.0) {
-            Ok(v) if v.len() == 0 => return Err(DatabaseError::NoEntry),
-            Ok(v) if v.len() > 1 => return Err(DatabaseError::Ambiguous),
-            Ok(mut v) => v.remove(0),
-            Err(e) => return Err(e.into())
-        };
+        for a in appt {
+            insert_into(appointments).values(a).execute(&conn.0).map_err(diesel_to_no_entry)?;
+        }
+        Ok(())
+    })
+
+}
+
+pub fn add_appointments_by_provider(conn: &DBConn, booking_id : i32, mut appointment_list : Vec<AppointmentSuggestion>, provider: i32) -> Result<(), DatabaseError>{
+
+    conn.transaction(move || {
+
+        let room = get_default_room_id_by_booking_id(conn, booking_id)?;
 
         let appt = appointment_list.drain(..).map(|sug| {
             NewAppointment {
                 start_time: sug.start_time,
                 end_time: sug.end_time,
                 state: String::from("SUGGESTED"),
-                proposer_id: provider.unwrap_or(customer),
+                proposer_id: provider,
                 books_id: booking_id,
                 room_id: room
             }
@@ -176,23 +227,22 @@ fn other_appointment_fields_changed(old: &Appointment, new: &Appointment) -> boo
         && old.books_id == new.books_id);
 }
 
+/// Enum used to pass one of the two types referencing a Booking Process.  
+/// Used when a Database Function is built Provider/Customer agnostic.
+pub enum BookingReference<'a> {
+    BookingId(i32),
+    BookingUrl(&'a str)
+}
+
 /// Cycles through the list of provided appointments that are to be updated,    
 /// checks each for existence, validity of updated values and authorization    
 /// for updating the specific fields. If all checks out, all changes get written    
 /// to the database. If not, the transaction gets canceled and a [DatabaseError] is returned.
-pub fn update_appointments(conn: &DBConn, booking_url : &str, appointment_list : Vec<Appointment>, provider: Option<i32>) -> Result<(), DatabaseError>{
+pub fn update_appointments(conn: &DBConn, booking_ref : BookingReference, appointment_list : Vec<Appointment>, provider : Option<i32>) -> Result<(), DatabaseError>{
 
     conn.transaction(move || {
 
-        let (customer, booking_id): (i32, i32) = match books
-        .filter(url.eq(booking_url))
-        .select((customer_id, schema::books::id))
-        .load::<(i32, i32)>(&conn.0) {
-            Ok(v) if v.len() == 0 => return Err(DatabaseError::NoEntry),
-            Ok(v) if v.len() > 1 => return Err(DatabaseError::Ambiguous),
-            Ok(mut v) => v.remove(0),
-            Err(e) => return Err(e.into())
-        };
+        let (customer, booking_id) = get_booking_details(conn, booking_ref)?;
 
         trace!(target: "db::update_appointments", "found customer {}", customer);
 
@@ -239,7 +289,6 @@ pub fn update_appointments(conn: &DBConn, booking_url : &str, appointment_list :
 
             trace!(target: "db::update_appointments", "updated appointment {}", updated_appointment.id);
         }
-        
 
 
         Ok(())

@@ -10,7 +10,6 @@ use rocket::{
 use rocket_contrib::json::Json;
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
-use time::Duration;
 
 use crate::db;
 use db::DBConn;
@@ -112,7 +111,6 @@ impl<'a, 'r> FromRequest<'a, 'r> for ProviderGuard {
             warn!(target: "ProviderGuard", "no cookies");
             return Outcome::Forward(());
         };
-        info!("{:?}", cookies);
 
         let mut custom_validation = Validation::default();
         custom_validation.validate_exp = false;
@@ -124,7 +122,9 @@ impl<'a, 'r> FromRequest<'a, 'r> for ProviderGuard {
                 &custom_validation,
             ) {
                 let now: u64 = SystemTime::UNIX_EPOCH.elapsed().unwrap().as_secs();
-                if token_data.claims.exp < now{
+                dbg!(now);
+                dbg!(token_data.claims.id);
+                if token_data.claims.exp < now {
                     token_data.claims.id
                 } else {
                     return Outcome::Failure((Status::Unauthorized, ()));

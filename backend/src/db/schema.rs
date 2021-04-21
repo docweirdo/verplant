@@ -31,7 +31,7 @@ table! {
         id -> Integer,
         name -> Text,
         default_duration -> Nullable<Integer>,
-        default_room_id -> Nullable<Integer>,
+        default_room_id -> Integer,
         course_type -> Nullable<Text>,
     }
 }

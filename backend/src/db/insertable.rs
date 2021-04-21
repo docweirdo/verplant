@@ -6,6 +6,6 @@ pub struct NewAppointment {
     pub end_time: String,
     pub books_id: i32,
     pub proposer_id: i32,
-    pub room_id: Option<i32>,
+    pub room_id: i32,
     pub state: String
 }

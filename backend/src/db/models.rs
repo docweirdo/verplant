@@ -19,7 +19,7 @@ pub struct Course {
     pub id: i32,
     pub name: String,
     pub default_duration: Option<i32>,
-    pub default_room_id: Option<i32>,
+    pub default_room_id: i32,
     pub course_type: Option<String>
 }
 
