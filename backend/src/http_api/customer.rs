@@ -19,7 +19,8 @@ pub fn mount_endpoints(rocket: Rocket) -> Rocket {
         get_booking_info_by_url, 
         get_appointments_by_url, 
         add_appointments_by_url,
-        update_appointments_by_url])
+        update_appointments_by_url,
+        withdraw_appointments])
 }
 
 
@@ -145,8 +146,8 @@ pub fn update_appointments_by_url(conn: DBConn, booking_url : String, updated_ap
             Err(Status::NotFound)
         },
         Err(DatabaseError::InvalidChange) => {
-            warn!(target: "PATCH /bookings/url/<booking_url>", "requested invalid change for url {}: {}", booking_url, DatabaseError::NoEntry);
-            Err(Status::BadRequest)
+            warn!(target: "PATCH /bookings/url/<booking_url>", "requested invalid change for url {}: {}", booking_url, DatabaseError::InvalidChange);
+            Err(Status::Forbidden)
         }
         Err(e) => {
             warn!(target: "PATCH /bookings/url/<booking_url>", "undefined error for url {}: {}", booking_url, e);
@@ -156,21 +157,36 @@ pub fn update_appointments_by_url(conn: DBConn, booking_url : String, updated_ap
     }
 }
 
-/* 
-#[delete("/bookings/<booking_url>", data = "<withdrawn_appointments>")]
-pub fn withdraw_appointments(provider: Option<ProviderGuard>, conn: DBConn, booking_url : String, withdrawn_appointments: Json<Vec<Appointment>>) -> Result<(), Status> {
-    
-    info!(target: "DELETE /bookings/<booking_url>", "booking url {} appointments withdrawal suggested", booking_url);
 
-     match db::withdraw_appointments(&conn, &booking_url, withdrawn_appointments.0, provider.map(|p| p.person_id)){
+#[delete("/bookings/url/<booking_url>", data = "<withdrawn_appointments>")]
+pub fn withdraw_appointments(conn: DBConn, booking_url : String, withdrawn_appointments: Json<Vec<i32>>) -> Result<(), Status> {
+    
+    info!(target: "DELETE /bookings/url/<booking_url>", "booking url {} appointments withdrawal suggested", booking_url);
+
+     match db::withdraw_appointments(&conn, BookingReference::BookingUrl(&booking_url), withdrawn_appointments.0, None){
         Ok(_) => Ok(()),
-        // Special Error Handling
+        Err(DatabaseError::DieselError(e)) => {
+            error!(target: "DELETE /bookings/url/<booking_url>", "database error for url {}: {}", booking_url, e);
+            Err(Status::InternalServerError)
+        },
+        Err(DatabaseError::Ambiguous) => {
+            error!(target: "DELETE /bookings/url/<booking_url>", "multiple entries for url {}: {}", booking_url, DatabaseError::Ambiguous);
+            Err(Status::InternalServerError)
+        }
+        Err(DatabaseError::NoEntry) => {
+            warn!(target: "DELETE /bookings/url/<booking_url>", "no entries for url {}: {}", booking_url, DatabaseError::NoEntry);
+            Err(Status::NotFound)
+        },
+        Err(DatabaseError::InvalidChange) => {
+            warn!(target: "DELETE /bookings/url/<booking_url>", "requested invalid withdrawal for url {}: {}", booking_url, DatabaseError::InvalidChange);
+            Err(Status::Forbidden)
+        }
         Err(e) => {
-            warn!(target: "DELETE /bookings/<booking_url>", "withdraw_appointments undefined error for url {}: {}", booking_url, e);
+            warn!(target: "DELETE /bookings/url/<booking_url>", "undefined error for url {}: {}", booking_url, e);
             Err(Status::InternalServerError)
         },
 
     }
-} */
+} 
 
 

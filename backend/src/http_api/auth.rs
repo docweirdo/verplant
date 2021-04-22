@@ -109,41 +109,30 @@ impl<'a, 'r> FromRequest<'a, 'r> for ProviderGuard {
             cookies
         } else {
             warn!(target: "ProviderGuard", "no cookies");
-            return Outcome::Forward(());
+            return Outcome::Failure((Status::Unauthorized, ()));
         };
-
-        let mut custom_validation = Validation::default();
-        custom_validation.validate_exp = false;
 
         let user_id: i32 = if let Some(cookie) = cookies.get("jwt") {
             if let Ok(token_data) = decode::<JWTClaims>(
                 cookie.value(),
                 &DecodingKey::from_secret("secret".as_ref()),
-                &custom_validation,
+                &Validation::default(),
             ) {
-                let now: u64 = SystemTime::UNIX_EPOCH.elapsed().unwrap().as_secs();
-                dbg!(now);
-                dbg!(token_data.claims.id);
-                if token_data.claims.exp < now {
-                    token_data.claims.id
-                } else {
-                    return Outcome::Failure((Status::Unauthorized, ()));
-                }
-                
+                token_data.claims.id
             } else {
                 warn!(target: "ProviderGuard", "JWT decode failed");
-                return Outcome::Forward(());
+                return Outcome::Failure((Status::Unauthorized, ()));
             }
         } else {
             warn!(target: "ProviderGuard", "cookies have no jwt key");
-            return Outcome::Forward(());
+            return Outcome::Failure((Status::Unauthorized, ()));
         };
 
         let conn = if let Outcome::Success(conn) = request.guard::<DBConn>() {
             conn
         } else {
             warn!(target: "ProviderGuard", "no DBConn");
-            return Outcome::Forward(());
+            return Outcome::Failure((Status::InternalServerError, ()));
         };
 
         match db::is_user_admin(conn, user_id) {
@@ -153,11 +142,11 @@ impl<'a, 'r> FromRequest<'a, 'r> for ProviderGuard {
             }),
             Err(DatabaseError::DieselError(e)) => {
                 error!(target: "ProviderGuard", "is_user_admin database error: {}", e);
-                Outcome::Forward(())
+                Outcome::Failure((Status::InternalServerError, ()))
             }
             Err(e) => {
                 warn!(target: "ProviderGuard", "undefined error: {}", e);
-                Outcome::Forward(())
+                Outcome::Failure((Status::InternalServerError, ()))
             }
         }
     }

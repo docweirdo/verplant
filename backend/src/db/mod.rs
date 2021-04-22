@@ -1,5 +1,5 @@
 use diesel::{prelude::*, update, insert_into};
-use log::{info, trace};
+use log::{info, trace, error};
 use pwhash::bcrypt;
 use thiserror::Error;
 
@@ -9,7 +9,6 @@ pub mod insertable;
 
 use models::*;
 use insertable::*;
-use schema::appointments::dsl::*;
 use schema::books::dsl::*;
 use schema::courses::dsl::*;
 use schema::persons::dsl::*;
@@ -106,6 +105,8 @@ pub fn get_booking_appointments_by_url(
     booking_url: &str,
 ) -> Result<(Vec<Appointment>, i32), DatabaseError> {
     
+    use schema::appointments::dsl::*;
+
     let customer: i32 = match books
         .filter(url.eq(booking_url))
         .select(customer_id)
@@ -172,6 +173,8 @@ fn get_default_room_id_by_booking_id(conn: &DBConn, booking_id: i32) -> Result<i
 
 pub fn add_appointments_by_customer(conn: &DBConn, booking_url : &str, mut appointment_list : Vec<AppointmentSuggestion>) -> Result<(), DatabaseError>{
 
+    use schema::appointments::dsl::*;
+
     conn.transaction(move || {
 
         let (customer, booking_id) = get_booking_details(conn, BookingReference::BookingUrl(booking_url))?;
@@ -196,6 +199,8 @@ pub fn add_appointments_by_customer(conn: &DBConn, booking_url : &str, mut appoi
 }
 
 pub fn add_appointments_by_provider(conn: &DBConn, booking_id : i32, mut appointment_list : Vec<AppointmentSuggestion>, provider: i32) -> Result<(), DatabaseError>{
+
+    use schema::appointments::dsl::*;
 
     conn.transaction(move || {
 
@@ -239,6 +244,8 @@ pub enum BookingReference<'a> {
 /// for updating the specific fields. If all checks out, all changes get written    
 /// to the database. If not, the transaction gets canceled and a [DatabaseError] is returned.
 pub fn update_appointments(conn: &DBConn, booking_ref : BookingReference, appointment_list : Vec<Appointment>, provider : Option<i32>) -> Result<(), DatabaseError>{
+
+    use schema::appointments::dsl::*;
 
     conn.transaction(move || {
 
@@ -294,4 +301,52 @@ pub fn update_appointments(conn: &DBConn, booking_ref : BookingReference, appoin
         Ok(())
     })
 
+}
+
+pub fn withdraw_appointments(conn : &DBConn, booking_ref: BookingReference, withdrawn_appointments : Vec<i32>, provider: Option<i32>) -> Result<(), DatabaseError> {
+    
+    use schema::appointments::dsl::*;
+
+    let (customer, _) = get_booking_details(conn, booking_ref)?;
+
+    let person = provider.unwrap_or(customer);
+
+    trace!(target: "db::withdraw_appointments", "found customer {}", customer);
+
+    for withdrawn_appointment in withdrawn_appointments {
+
+        trace!(target: "db::withdraw_appointments", "searching for appointment {}", withdrawn_appointment);
+
+        let old_appointment : Appointment = match appointments.find(withdrawn_appointment).first::<Appointment>(&conn.0).map_err(diesel_to_no_entry) {
+            Ok(a) => a,
+            Err(e) => return Err(e.into())
+        };
+
+        trace!(target: "db::withdraw_appointments", "found appointment {}", withdrawn_appointment);
+
+
+        // only allow withdrawal if current state is "SUGGESTED"
+        if old_appointment.state != "SUGGESTED" {
+            return Err(DatabaseError::InvalidChange);
+        }
+
+        if old_appointment.proposer_id != person{
+            return Err(DatabaseError::InvalidChange);
+        }
+
+        match diesel::delete(appointments.filter(id.eq(withdrawn_appointment))).execute(&conn.0) {
+            Ok(1) => {},
+            Ok(0) => { 
+                error!(target: "db::withdraw_appointments", "appointment {} deletion req. checked out but row not found", withdrawn_appointment);
+                return Err(DatabaseError::NoEntry);
+            },
+            Ok(_) => {
+                error!(target: "db::withdraw_appointments", "appointment {} deletion req. checked out but multiple rows", withdrawn_appointment);
+                return Err(DatabaseError::Ambiguous);
+            },
+            Err(e) => return Err(e.into())
+        }
+    }
+    
+    Ok(())
 }
