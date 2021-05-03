@@ -12,6 +12,7 @@ export const currentTranslation = {
   phone: "Telefon",
   organisation: "Organisation",
   class: "Klasse / Kurs",
+  groupSize: "Gruppengröße",
   password: "Passwort",
   login: "Einloggen",
   loginError: "Email oder Passwort sind falsch",

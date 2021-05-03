@@ -67,6 +67,8 @@ export default defineComponent({
   setup() {
     const site = ref(0);
 
+    (window as any).site = site;
+
 
     const loading = ref(false);
 
@@ -169,7 +171,8 @@ export default defineComponent({
   padding-top: 0px;
   width: calc(100vw - 20px);
   max-width: 600px;
-  height: min(calc(100vh - 200px), 700px);
+  min-height: auto;
+  height: min(calc(100vh - 500px), 700px);
   margin: 0 auto;
   display: flex;
   overflow: hidden;

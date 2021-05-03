@@ -84,6 +84,19 @@
         v-model="store.contactInformations.class"
       />
     </div>
+    <div class="group-infos">
+      <div class="label-with-info">
+        <label for="organisation">{{ currentTranslation.groupSize }}</label>
+        <i class="pi pi-globe info-icon" />
+      </div>
+      <InputText
+        id="group-size"
+        type="number"
+        v-model="store.contactInformations.groupSize"
+      />
+
+    </div>
+    <!-- footer of card -->
     <InfoDialog ref="infoDialog" />
     <p>* {{ currentTranslation.mandatoryField }}</p>
     <hr />
@@ -163,12 +176,14 @@ export default defineComponent({
 .contact-infos {
   width: 100%;
   display: grid;
-  grid-template-rows: repeat(6, min-content) auto repeat(2, min-content);
+  /*min-height: min-content; to be figured out */
+  grid-template-rows: repeat(7, min-content) auto repeat(2, min-content);
 }
 
 .names,
 .contact-1,
-.school-infos {
+.school-infos,
+.group-infos {
   display: grid;
   grid-template-columns: 1fr 1fr;
   column-gap: 0.5em;
@@ -183,6 +198,10 @@ export default defineComponent({
   padding: 0.1rem;
   border-radius: 50%;
   border: 0.1rem solid black;
+}
+
+#group-size {
+  grid-row: 2 / span 1;
 }
 
 hr {
