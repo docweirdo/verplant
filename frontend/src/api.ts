@@ -109,6 +109,27 @@ class FakeApi implements Api {
             status: AppointmentStatus.Approved,
             proposer_id: 2,
           },
+          {
+            id: 2,
+            starttime: new Date("2021-05-01T14:32Z"),
+            endtime: new Date("2021-05-01T14:12Z"),
+            status: AppointmentStatus.Pending,
+            proposer_id: 1,
+          },
+          {
+            id: 3,
+            starttime: new Date("2021-05-02T14:32Z"),
+            endtime: new Date("2021-05-02T14:12Z"),
+            status: AppointmentStatus.Suggested,
+            proposer_id: 2,
+          },
+          {
+            id: 4,
+            starttime: new Date("2021-05-04T14:32Z"),
+            endtime: new Date("2021-05-04T14:12Z"),
+            status: AppointmentStatus.Approved,
+            proposer_id: 2,
+          },
         ]);
       }, 0);
     });

@@ -87,14 +87,13 @@
     <div class="group-infos">
       <div class="label-with-info">
         <label for="organisation">{{ currentTranslation.groupSize }}</label>
-        <i class="pi pi-globe info-icon" />
+        <i class="pi pi-sort-numeric-up info-icon" />
       </div>
       <InputText
         id="group-size"
         type="number"
         v-model="store.contactInformations.groupSize"
       />
-
     </div>
     <!-- footer of card -->
     <InfoDialog ref="infoDialog" />
@@ -176,7 +175,7 @@ export default defineComponent({
 .contact-infos {
   width: 100%;
   display: grid;
-  /*min-height: min-content; to be figured out */
+  min-height: auto;
   grid-template-rows: repeat(7, min-content) auto repeat(2, min-content);
 }
 
@@ -218,9 +217,6 @@ p {
 .p-field-checkbox {
   margin: 0.9em 0;
 }
-
-
-
 
 .p-field-checkbox > label {
   margin-left: 0.5em;

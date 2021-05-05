@@ -4,7 +4,7 @@
       <h1 id="card-headline" class="p-component">
         {{ currentTranslation.loginCardTitle }}
       </h1>
-      <Card class="center-card">
+      <Card class="center-card" :class="[`page-${site}`]">
         <template #content>
           <ContactInformation v-if="site == 0" />
           <Appointments v-else-if="site == 1" />
@@ -45,7 +45,7 @@ import router from "@/router";
 // Foreign Components
 import Card from "primevue/card";
 import Button from "primevue/button";
-import Tooltip from 'primevue/tooltip';
+import Tooltip from "primevue/tooltip";
 
 // Our Components
 import Appointments from "@/views/Appointments.vue";
@@ -62,13 +62,12 @@ export default defineComponent({
     ContactInformation,
   },
   directives: {
-    "tooltip": Tooltip
+    tooltip: Tooltip,
   },
   setup() {
     const site = ref(0);
 
     (window as any).site = site;
-
 
     const loading = ref(false);
 
@@ -133,15 +132,19 @@ export default defineComponent({
     const missingFieldsTooltipText = computed(() => {
       if (allMandatoryFilled.value) return "";
       const missingFields: string[] = [];
-      if (store.contactInformations.firstname.length < 1) missingFields.push(currentTranslation.firstname);
-      if (store.contactInformations.lastname.length < 1) missingFields.push(currentTranslation.lastname);
-      if (!isEmail(store.contactInformations.email)) missingFields.push(currentTranslation.email);
-      if (!store.contactInformations.acceptedLegalNotice) missingFields.push(currentTranslation.legalNoticeShort);
+      if (store.contactInformations.firstname.length < 1)
+        missingFields.push(currentTranslation.firstname);
+      if (store.contactInformations.lastname.length < 1)
+        missingFields.push(currentTranslation.lastname);
+      if (!isEmail(store.contactInformations.email))
+        missingFields.push(currentTranslation.email);
+      if (!store.contactInformations.acceptedLegalNotice)
+        missingFields.push(currentTranslation.legalNoticeShort);
 
       if (missingFields.length == 1) {
         return `Feld ${missingFields[0]} fehlt.`; // TODO: allow interpolatable strings in currentTranslation
       }
-      return `Folgende Felder sind Pflichtfelder: ${missingFields.join(", ")}`
+      return `Folgende Felder sind Pflichtfelder: ${missingFields.join(", ")}`;
     });
 
     return {
@@ -152,7 +155,7 @@ export default defineComponent({
       currentTranslation,
       history,
       allMandatoryFilled,
-      missingFieldsTooltipText
+      missingFieldsTooltipText,
     };
   },
 });
@@ -160,22 +163,25 @@ export default defineComponent({
 
 <style scoped>
 .home {
-  width: 100vw;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
 }
+
 .center-card {
   padding-top: 0px;
   width: calc(100vw - 20px);
   max-width: 600px;
-  min-height: auto;
-  height: min(calc(100vh - 500px), 700px);
   margin: 0 auto;
   display: flex;
+  min-height: min(calc(100vh - 200px), 700px);
   overflow: hidden;
+}
+
+.center-card.page-1 {
+  height: min(calc(100vh - 200px), 700px);
 }
 
 #card-headline {
@@ -188,6 +194,9 @@ export default defineComponent({
 @media only screen and (max-height: 700px) {
   .center-card {
     min-height: calc(100vh - 12em);
+  }
+
+  .center-card.page-1 {
     height: unset;
   }
 

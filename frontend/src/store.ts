@@ -9,7 +9,7 @@ class VerplantStore {
     organisation: "",
     group: "",
     acceptedLegalNotice: false,
-    groupSize: 0
+    groupSize: 0,
   });
 }
 
