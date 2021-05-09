@@ -22,7 +22,7 @@
       v-bind:filter="true"
     />
     <hr />
-    <div class="names">
+    <div class="names split-lwi">
       <div class="label-with-info">
         <label for="first-name">{{ currentTranslation.firstname }}*</label>
         <i id="user-icon" class="pi pi-user info-icon" />
@@ -42,7 +42,7 @@
         v-model="store.contactInformations.lastname"
       />
     </div>
-    <div class="contact-1">
+    <div class="contact-1 split-lwi">
       <div class="label-with-info">
         <label for="mail">{{ currentTranslation.email }}*</label>
         <i class="pi pi-envelope info-icon" />
@@ -63,7 +63,7 @@
         v-model="store.contactInformations.phone"
       />
     </div>
-    <div class="school-infos">
+    <div class="school-infos split-lwi">
       <div class="label-with-info">
         <label for="organisation">{{ currentTranslation.organisation }}</label>
         <i class="pi pi-globe info-icon" />
@@ -84,7 +84,7 @@
         v-model="store.contactInformations.class"
       />
     </div>
-    <div class="group-infos">
+    <div class="group-infos split-lwi">
       <div class="label-with-info">
         <label for="organisation">{{ currentTranslation.groupSize }}</label>
         <i class="pi pi-sort-numeric-up info-icon" />
@@ -179,14 +179,12 @@ export default defineComponent({
   grid-template-rows: repeat(7, min-content) auto repeat(2, min-content);
 }
 
-.names,
-.contact-1,
-.school-infos,
-.group-infos {
+.split-lwi {
   display: grid;
   grid-template-columns: 1fr 1fr;
   column-gap: 0.5em;
 }
+
 
 .info-icon {
   cursor: unset;
@@ -221,6 +219,17 @@ p {
 .p-field-checkbox > label {
   margin-left: 0.5em;
 }
+
+/* === MOBILE === */
+@media only screen and (max-width: 520px) {
+  .split-lwi {
+    grid-template-columns: 1fr;
+  }
+  .split-lwi > .label-with-info:nth-of-type(2) {
+    grid-row-start: 3;
+  }
+}
+
 </style>
 
 <style>

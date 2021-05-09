@@ -191,6 +191,12 @@ export default defineComponent({
   margin-bottom: 5px;
 }
 
+@media only screen and (max-width: 520px) {
+  .center-card {
+    width: 100vw;
+  }
+}
+
 @media only screen and (max-height: 700px) {
   .center-card {
     min-height: calc(100vh - 12em);
