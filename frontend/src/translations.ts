@@ -43,4 +43,6 @@ export const currentTranslation = {
     appointmentList: `In diesem Feld finden Sie eine Liste der Terminvorschläge, die Sie abgegeben haben und die 
         Ihnen gemacht worden sind. Lassen Sie dieses Feld leer, um Vorschläge anzufragen. //TODO: Colorcodes`,
   },
+  pageNotFoundTitle: "Seite nicht gefunden",
+  pageNotFoundText: "Die aufgerufene Adresse existiert nicht. Versuche es erneut oder überprüfe, ob du den Link richtig geschrieben hast."
 };
