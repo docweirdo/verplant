@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 import HomeCard from "../views/HomeCard.vue";
+import Page404 from "../views/404.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -16,6 +17,11 @@ const routes: Array<RouteRecordRaw> = [
     component: () =>
       import(/* webpackChunkName: "about" */ "../views/Login.vue"),
   },
+  { 
+    path: '/:pathMatch(.*)*', // see https://next.router.vuejs.org/guide/migration/#removed-star-or-catch-all-routes why * doesn't work anymore
+    name: '404', 
+    component: Page404 
+  }
 ];
 
 const router = createRouter({
