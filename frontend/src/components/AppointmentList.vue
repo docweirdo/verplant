@@ -222,6 +222,7 @@ export default defineComponent({
   }
 }
 
+
 .p-card {
   box-shadow: 0 2px 1px -1px rgba(0, 0, 0, 0.2), 0 1px 5px 0 rgba(0, 0, 0, 0.14),
     0 1px 5px 0 rgba(0, 0, 0, 0.15);
@@ -269,8 +270,16 @@ export default defineComponent({
   /*height: 100%;*/
 }
 
+.p-card .controls > .p-buttonset {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+  height: 100%;
+}
+
 .p-card .controls .p-button {
   height: 100%;
+  width: auto;
 }
 
 .p-card .controls .approve {
@@ -318,6 +327,7 @@ label[for="filters"] {
   display: flex;
   gap: 0.3em;
   margin-bottom: 0.5em;
+  flex-wrap: wrap;
 }
 
 #filters .p-button {
@@ -327,5 +337,20 @@ label[for="filters"] {
 #filters .p-button.active {
   background-color: var(--accentColor);
   color: white;
+}
+
+
+/* === MOBILE === */
+
+@media only screen and (max-width: 520px) {
+  .p-card {
+
+  grid-template-columns: 1fr 1fr 1fr;
+  
+
+  grid-template-areas:
+    "date status status"
+    "time controls controls";
+}
 }
 </style>
