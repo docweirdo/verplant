@@ -44,5 +44,5 @@ export const currentTranslation = {
         Ihnen gemacht worden sind. Lassen Sie dieses Feld leer, um Vorschläge anzufragen. //TODO: Colorcodes`,
   },
   pageNotFoundTitle: "Seite nicht gefunden",
-  pageNotFoundText: "Die aufgerufene Adresse existiert nicht. Versuche es erneut oder überprüfe, ob du den Link richtig geschrieben hast."
+  pageNotFoundText: "Die aufgerufene Adresse existiert nicht. Bitte versuchen Sie es erneut oder überprüfen, ob Sie den Link richtig geschrieben haben."
 };

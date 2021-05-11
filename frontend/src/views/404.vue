@@ -56,9 +56,10 @@ export default defineComponent({
 
 .not-found .wrapper {
   display: grid;
-  grid-template-columns: auto 2.5rem;
+  grid-template-rows: auto 5rem;
   align-items: center;
   justify-items: center;
+  text-align: justify;
 }
 
 .not-found .wrapper p {
@@ -78,7 +79,7 @@ export default defineComponent({
 }
 
 .not-found .wrapper i {
-  font-size: 2em;
+  font-size: 2.5em;
   animation: rotate 2s ease-in-out;
   animation-iteration-count: infinite;
 }
