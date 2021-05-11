@@ -351,6 +351,10 @@ label[for="filters"] {
   grid-template-areas:
     "date status status"
     "time controls controls";
-}
+  }
+
+  .p-card .status::before {
+    content: none;
+  }
 }
 </style>
