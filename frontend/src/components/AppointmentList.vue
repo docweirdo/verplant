@@ -68,12 +68,12 @@
         <div class="between-slot">
           <slot name="between"></slot>
         </div>
-        <label for="filters" v-if="showFilters && filterOptions.length > 1"
+        <label for="filters" v-if="showFilters && visibleSelectors.length > 1"
           >Filter</label
         >
-        <div id="filters" v-if="showFilters && filterOptions.length > 1">
+        <div id="filters" v-if="showFilters && visibleSelectors.length > 1">
           <Button
-            v-for="f in filterOptions"
+            v-for="f in visibleSelectors"
             :key="f.type"
             :label="f.display"
             @click.stop="f.active = !f.active"
@@ -131,7 +131,8 @@ export default defineComponent({
   async setup(props, { emit }) {
     const infoDialog = ref(false);
 
-    const filterOptions = ref(
+    // Determine all Selectors by available Stati
+    const selectors = ref(
       Object.entries(AppointmentStatus)
         .map(([_k, v]) => {
           return {
@@ -140,17 +141,22 @@ export default defineComponent({
             active: true,
           };
         })
-        .filter((filterEntry) => {
-          return props.appointments.some(
-            (apptmnt) => apptmnt.status === filterEntry.type
-          );
-        })
     );
 
+    // Filter for each selector if at least one appointment has the status
+    const visibleSelectors = computed(() => {
+      return selectors.value.filter((selector) => {
+          return props.appointments.some(
+            (apptmnt) => apptmnt.status === selector.type
+          );
+        })
+    });
+
+    // Apply filters
     const filteredAppointments = computed(() => {
       return props.appointments.filter(
         (e) =>
-          filterOptions.value.find((f) => e.status == f.type && f.active) !=
+          visibleSelectors.value.find((f) => e.status == f.type && f.active) !=
           undefined
       );
     });
@@ -193,7 +199,7 @@ export default defineComponent({
       filteredAppointments,
       currentTranslation,
       infoDialog,
-      filterOptions,
+      visibleSelectors,
       toDateString: utils.toDateString,
       toTimeString: utils.toTimeString,
     };

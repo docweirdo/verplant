@@ -42,11 +42,12 @@
 
 <script lang="ts">
 // Foreign stuff
-import { defineComponent, ref } from "vue";
+import { defineComponent, ref, Ref } from "vue";
 
 // Our stuff
-import { api, Course, AppointmentSuggestion, AppointmentStatus } from "@/api";
+import { api, Course, AppointmentSuggestion, AppointmentStatus, Appointment } from "@/api";
 import { currentTranslation } from "@/translations";
+import CustomerService from '@/CustomerService'
 
 // Foreign Components
 import Dialog from "primevue/dialog";
@@ -72,7 +73,7 @@ export default defineComponent({
 
     const rawAppointments = await api.getAppointments("abcde"); // TODO: Booking ID Logic
     console.log(rawAppointments);
-    const appointments = ref([...rawAppointments]);
+    const appointments : Ref<Appointment[]> = CustomerService.appointments;
 
     const createAppointment = (event: AppointmentSuggestion) => {
       console.log(event);

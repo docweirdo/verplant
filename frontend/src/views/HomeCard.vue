@@ -41,6 +41,7 @@ import { api, Course } from "@/api";
 import store from "@/store";
 import { currentTranslation } from "@/translations";
 import router from "@/router";
+import CustomerService from "@/CustomerService";
 
 // Foreign Components
 import Card from "primevue/card";
@@ -91,7 +92,7 @@ export default defineComponent({
       } else if (site.value == 1) {
         // Todo: API Call
         loading.value = true;
-        await new Promise((r) => setTimeout(r, 1500));
+        await CustomerService.sendChanges();
         loading.value = false;
       }
     };
