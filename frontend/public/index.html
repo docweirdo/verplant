@@ -6,11 +6,63 @@
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <link rel="icon" href="<%= BASE_URL %>favicon.ico">
     <title><%= htmlWebpackPlugin.options.title %></title>
+    <style>
+      #loader-container {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        background-color: white;
+        z-index: 1000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: opacity 0.5s;
+      }
+      #loader-container .logo {
+        width: 5em;
+        height: 5em;
+        background-color: red;
+        margin: 0 auto;
+      }
+
+      #loader-container h1 {
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+      }
+
+      @keyframes rotate {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      #loader-container .spinner {
+        width: 2em;
+        height: 2em;
+        border: 2px solid #555;
+        border-bottom: unset;
+        border-right: unset;
+        margin: 0 auto;
+        border-radius: 50%;
+        animation: rotate forwards infinite 0.5s linear;
+      }
+    </style>
   </head>
   <body>
     <noscript>
       <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
     </noscript>
+    <div id="loader-container">
+      <div class="centered">
+        <div class="logo"></div>
+        <h1>VERPLANT</h1>
+        <div class="spinner"></div>
+      </div>
+    </div>
     <div id="app"></div>
     <!-- built files will be auto injected -->
   </body>

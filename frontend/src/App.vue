@@ -3,6 +3,23 @@
     <router-view />
   </Suspense>
 </template>
+<script lang="ts">
+import { defineComponent } from 'vue'
+
+export default defineComponent({
+  mounted() {
+    setTimeout(() => {
+      // remove loader page after home and all child components are mounted (+ 1s for asthetics)
+      const loader: HTMLDivElement = document.querySelector('#loader-container');
+      loader.style.opacity = '0'
+      setTimeout(() => {
+        loader.remove();
+        console.log('removed loader container');
+      }, 500); // opacity transition is 0.5s long
+    }, 1000);
+  }
+})
+</script>
 
 <style>
 body {

@@ -25,7 +25,6 @@ class CustomerService {
     const newMap = new Map<number, Appointment>()
 
     const changes: Appointment[] = [];
-
     for (const e of this.appointments.value) { changes.push(Object.assign({}, e)) }
 
     //const changes = this.appointments.value[Symbol.for('ORIGINAL') as unknown as number] as unknown as Appointment[];
