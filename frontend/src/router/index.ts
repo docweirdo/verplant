@@ -9,6 +9,14 @@ const routes: Array<RouteRecordRaw> = [
     component: HomeCard,
   },
   {
+    path: "/my-booking/:bookingUrl", // can be accessed with $route.params.bookingUrl
+    name: "Home",
+    component: HomeCard,
+    beforeEnter: (to, from, next) => {
+      console.log(to.params.bookingUrl)
+    }
+  },
+  {
     path: "/login",
     name: "Login",
     // route level code-splitting

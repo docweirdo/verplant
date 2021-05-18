@@ -1,3 +1,6 @@
+import store from '@/store'
+
+
 export interface Course {
   id: number;
   name: string;
@@ -38,6 +41,13 @@ interface Api {
    * returns true if successfull, false if credentials were wrong, throws on response error
    */
   login(email: string, password: string): Promise<boolean>;
+  updateAppointments(bookingUrl: string, updated: Appointment[]): Promise<void>;
+  addAppointments(bookingUrl: string, added: Appointment[]): Promise<void>;
+  withdrawAppointments(bookingUrl: string, withdrawn: Appointment[]): Promise<void>;
+  /**
+   * returns the new URL
+   */
+  createNewBooking(customerInfos: typeof store.contactInformations): Promise<string>;
 }
 
 class FakeApi implements Api {
@@ -133,7 +143,31 @@ class FakeApi implements Api {
         ]);
       }, 0);
     });
+
   }
+
+  async updateAppointments(bookingURL : string, updated : Appointment[]): Promise<void> {
+    console.log('updated appointments', updated);
+    return Promise.resolve();
+  }
+
+  async addAppointments(bookingURL : string, added : Appointment[]): Promise<void> {
+    console.log('added appointments', added);
+    
+    return Promise.resolve();
+  }
+
+  async withdrawAppointments(bookingURL : string, withdrawn : Appointment[]): Promise<void> {
+    console.log('withdrawn appointments', withdrawn);
+    
+    return Promise.resolve();
+  }
+
+  createNewBooking(customerInfos: typeof store.contactInformations): Promise<string> {
+    console.log('createNewBooking', customerInfos);
+    return Promise.resolve('fake-url');
+  }
+  
 }
 
 class HttpApi implements Api {
@@ -173,6 +207,27 @@ class HttpApi implements Api {
         endtime: new Date(appointment.endtime),
       } as Appointment;
     });
+  }
+
+  async updateAppointments(bookingURL : string, updated : Appointment[]): Promise<void> {
+   
+    return Promise.resolve();
+  }
+
+  async addAppointments(bookingURL : string, added : Appointment[]): Promise<void> {
+    console.log('added appointments', added);
+    
+    return Promise.resolve();
+  }
+
+  async withdrawAppointments(bookingURL : string, withdrawn : Appointment[]): Promise<void> {
+    console.log('withdrawn appointments', withdrawn);
+    
+    return Promise.resolve();
+  }
+
+  async createNewBooking(args: typeof store.contactInformations): Promise<string> {
+    return Promise.resolve("safgeasg")
   }
 }
 
