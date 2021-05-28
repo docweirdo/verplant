@@ -13,6 +13,8 @@
       />
     </div>
     <Dropdown
+      id="course-dropdown"
+      v-if="groupedCourses.length > 0"
       v-model="selectedCourse"
       v-bind:options="groupedCourses"
       optionLabel="name"
@@ -21,6 +23,7 @@
       v-bind:placeholder="currentTranslation.selectedCoursePlaceholder"
       v-bind:filter="true"
     />
+    <ProgressSpinner v-else id="course-spinner" />
     <hr />
     <div class="names split-lwi">
       <div class="label-with-info">
@@ -123,6 +126,7 @@ import { currentTranslation } from "@/translations";
 import InputText from "primevue/inputtext";
 import Dropdown from "primevue/dropdown";
 import Checkbox from "primevue/checkbox";
+import ProgressSpinner from "primevue/progressspinner";
 
 // Our Components
 import InfoDialog from "@/components/InfoDialog.vue";
@@ -134,31 +138,32 @@ export default defineComponent({
     InputText,
     Dropdown,
     Checkbox,
+    ProgressSpinner
   },
 
   async setup() {
-    const apiResult = await api.getCourses();
+    const apiCoursePromise = api.getCourses();
     const selectedCourse = ref(null);
     const infoDialog = ref(null);
 
     const courseTypes: Map<string, Course[]> = new Map();
+    const groupedCourses = ref<{ courses: Course[]; groupType: string }[]>([]);
 
-    // Split courses after types
-    for (const result of apiResult) {
-      const cType = result.course_type ?? currentTranslation.miscCourseType;
-      const c = courseTypes.get(cType);
-      if (c) c.push(result);
-      else courseTypes.set(cType, [result]);
-    }
-
-    const groupedCourses: { courses: Course[]; groupType: string }[] = [];
-
-    for (const [key, value] of courseTypes.entries()) {
-      groupedCourses.push({
-        groupType: key,
-        courses: value,
-      });
-    }
+    apiCoursePromise.then(apiResult => {
+      // Split courses after types
+      for (const result of apiResult) {
+        const cType = result.course_type ?? currentTranslation.miscCourseType;
+        const c = courseTypes.get(cType);
+        if (c) c.push(result);
+        else courseTypes.set(cType, [result]);
+      }
+      for (const [key, value] of courseTypes.entries()) {
+        groupedCourses.value.push({
+          groupType: key,
+          courses: value,
+        });
+      }
+    })
 
     return {
       currentTranslation,
@@ -177,6 +182,14 @@ export default defineComponent({
   display: grid;
   min-height: auto;
   grid-template-rows: repeat(7, min-content) auto repeat(2, min-content);
+}
+
+#course-spinner {
+  width: 50px;
+  height: 50px;
+}
+#course-dropdown {
+  height: 50px;
 }
 
 .split-lwi {

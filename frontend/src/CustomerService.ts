@@ -1,4 +1,4 @@
-import { Ref, ref } from "vue";
+import { Ref, ref, toRaw, watch } from "vue";
 import { Appointment, api } from "@/api";
 import deepEqual from 'fast-deep-equal';
 import store from "./store";
@@ -6,60 +6,87 @@ import store from "./store";
 class CustomerService {
   private originalAppointments: Appointment[];
   appointments: Ref<Appointment[]> = ref([]);
+  listUpdating = ref(false)
 
   constructor() {
     this.originalAppointments = [];
-    this.fetchAppointments()
+    watch(store.bookingUrl, (val, oldVal) => {
+      this.onBookingUrlChanged(val, oldVal)
+    })
+  }
+  
+  async onBookingUrlChanged(url: string | null, oldUrl?: string | null): Promise<void> {
+    if (url && url !== oldUrl) {
+      await this.fetchAppointments()
+    }
   }
 
   async fetchAppointments(): Promise<void> {
-    this.originalAppointments = await api.getAppointments('abcde')
+    if (!store.bookingUrl.value) {
+      console.error('CustomerService.fetchAppointments was called, but store.bookingUrl was null');
+      return
+    }
+    this.listUpdating.value = true
+    this.originalAppointments = await api.getAppointments(store.bookingUrl.value)
     this.appointments.value = this.originalAppointments.map(a => {return {...a}})
+    this.listUpdating.value = false
   }
 
-  async newBooking(){
-    // url = await api.newBooking(...)
-    const url = "abcde"
-    store.bookingUrl.value = url;
-
-    // api.addAppointments(url, ...)
+  /**
+   * @returns URL for the new booking
+   */
+  async newBooking(): Promise<string> {
+    const url = await api.createNewBooking(toRaw(store.contactInformations))
+    console.log(url);
+    
+    await this.sendChanges(url);
+    return url
   }
 
-  async sendChanges() {
-
+  getChangedAppointments(): {added: Appointment[], withdrawn: Appointment[], updated: Appointment[]} {
     const added: Appointment[] = [];
     const withdrawn: Appointment[] = [];
     const updated: Appointment[] = [];
 
-    const newMap = new Map<number, Appointment>()
+    const localApptmtState: Map<number, Appointment> = new Map();
 
-    const changes: Appointment[] = [];
-    for (const e of this.appointments.value) { changes.push(Object.assign({}, e)) }
-
-    //const changes = this.appointments.value[Symbol.for('ORIGINAL') as unknown as number] as unknown as Appointment[];
-
-    console.log(changes);
-    console.log(this.originalAppointments);
-    
-    
-    for (const apptmnt of changes) {
-      if (!apptmnt.id) {
+    for (const apptmntProxy of this.appointments.value) {
+      const apptmnt = {...toRaw(apptmntProxy)}
+      if (apptmnt.id === undefined) {
         added.push(apptmnt);
       } else {
-        newMap.set(apptmnt.id, apptmnt)
+        localApptmtState.set(apptmnt.id, apptmnt)
       }
     }
 
+
     // assumption: all appointments from the api have an id set
     for (const apptmnt of this.originalAppointments) {
-      const newApptmnt = newMap.get(apptmnt.id as number)
-      //debugger
+      const newApptmnt = localApptmtState.get(apptmnt.id as number)
       if (!newApptmnt) {
+        // appointment was in original, but i not in local state
         withdrawn.push(apptmnt)
       } else if (!deepEqual(newApptmnt, apptmnt)) {
         updated.push(newApptmnt)
       }
     } 
+
+    return {
+      added,
+      withdrawn,
+      updated
+    }
+  }
+
+  async sendChanges(overwriteUrl?: string) {
+    const url = overwriteUrl ?? store.bookingUrl.value
+
+    if (!url) {
+      console.error('CustomerService.sendChanges() called, but neither store.bookingUrl nor overwriteUrl were defined')
+      return
+    }
+
+    const { added, withdrawn, updated } = this.getChangedAppointments()
 
     console.log('updated', updated)
     console.log('added', added)
@@ -67,13 +94,13 @@ class CustomerService {
     const apiCalls = [];
 
     if (updated.length){
-      apiCalls.push(api.updateAppointments(store.bookingUrl.value as string, updated))
+      apiCalls.push(api.updateAppointments(url, updated))
     }
     if (added.length){
-      apiCalls.push(api.addAppointments(store.bookingUrl.value as string, added))
+      apiCalls.push(api.addAppointments(url, added))
     }
     if (withdrawn.length){
-      apiCalls.push(api.withdrawAppointments(store.bookingUrl.value as string, withdrawn))
+      apiCalls.push(api.withdrawAppointments(url, withdrawn))
     }
 
     if (apiCalls.length){
@@ -81,7 +108,7 @@ class CustomerService {
         await Promise.all(apiCalls);
         await this.fetchAppointments();
       } catch (error) {
-        console.error(error)
+        console.error(error) // TODO: popup on error?
       }
     }
   }

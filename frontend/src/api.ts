@@ -50,8 +50,50 @@ interface Api {
   createNewBooking(customerInfos: typeof store.contactInformations): Promise<string>;
 }
 
+type ApiCalls = keyof Api;
+type AsyncFuncType = (...args: any[]) => Promise<any>;
 class FakeApi implements Api {
   private loggedIn = false;
+
+  private fakeUrlAppointments: Appointment[] = []
+  private fakeAppointmentId = 0 
+
+  /**
+   * @param requestDelay fetch delay in ms
+   */
+  constructor(requestDelay?: number) {
+    (window as any).fakeApi = this
+    if (typeof requestDelay === 'number') {
+      // !!! only apply to async functions !!!
+      const delayedFunctions: (ApiCalls)[] = [
+        'addAppointments',
+        'createNewBooking',
+        'getAppointments',
+        'getCourses',
+        'login',
+        'updateAppointments',
+        'withdrawAppointments'
+      ]
+  
+      for (const funcName of delayedFunctions) {
+        
+        const orig = this[funcName] as AsyncFuncType
+        (this[funcName] as AsyncFuncType) = (...args: any[]) => {
+          return new Promise((resolve, reject) => {
+            console.log('called ' + funcName, args);
+            
+            orig.call(this, ...args).then((res: any) => {
+              setTimeout(() => {
+                console.log(`resolved ${funcName}`, res);
+                
+                resolve(res)
+              }, requestDelay)
+            })
+          })
+        }
+      }
+    }
+  }
 
   getCourses() {
     return Promise.resolve([
@@ -88,8 +130,9 @@ class FakeApi implements Api {
   }
 
   getAppointments(bookingURL: string): Promise<Appointment[]> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
+
+    if (bookingURL === 'filled') {
+      return new Promise((resolve) => {
         resolve([
           {
             id: 1,
@@ -141,25 +184,45 @@ class FakeApi implements Api {
             proposer_id: 2,
           },
         ]);
-      }, 0);
-    });
+      });
+    }
+    
+    if (bookingURL === 'fake-url') {
+      return Promise.resolve(this.fakeUrlAppointments)
+    }
 
+    return Promise.reject({error: 'Unknown URL'}) // TODO: typing for errors
   }
 
   async updateAppointments(bookingURL : string, updated : Appointment[]): Promise<void> {
     console.log('updated appointments', updated);
+    if (bookingURL === 'fake-url') {
+      // replaced all from updated in list
+      this.fakeUrlAppointments = this.fakeUrlAppointments.map(appt => {
+        const updatedAppt = updated.find(uAppt => uAppt.id === appt.id);
+        return updatedAppt ?? appt
+      });
+    }
     return Promise.resolve();
   }
 
   async addAppointments(bookingURL : string, added : Appointment[]): Promise<void> {
     console.log('added appointments', added);
-    
+    if (bookingURL === 'fake-url') {
+      this.fakeUrlAppointments = [...this.fakeUrlAppointments, ...added.map(appt => {
+        appt.id = this.fakeAppointmentId++;
+        appt.proposer_id = 1
+        return appt
+      })]
+    }
     return Promise.resolve();
   }
 
   async withdrawAppointments(bookingURL : string, withdrawn : Appointment[]): Promise<void> {
     console.log('withdrawn appointments', withdrawn);
-    
+    if (bookingURL === 'fake-url') {
+      this.fakeUrlAppointments = this.fakeUrlAppointments.filter(appt => !withdrawn.find(wAppt => wAppt.id === appt.id))
+    }
     return Promise.resolve();
   }
 
@@ -231,5 +294,5 @@ class HttpApi implements Api {
   }
 }
 
-export const api: Api = new FakeApi();
+export const api: Api = new FakeApi(2000);
 //export const api: Api = new HttpApi();

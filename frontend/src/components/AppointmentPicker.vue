@@ -45,7 +45,7 @@ export default defineComponent({
     Calendar,
   },
   props: {
-    duration: Date,
+    duration: Date, // TODO: default duration?
   },
   emits: ["newAppointment"],
   setup(props, { emit }) {

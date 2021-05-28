@@ -2,7 +2,7 @@
   <div class="home">
     <div class="home-content">
       <h1 id="card-headline" class="p-component">
-        {{ currentTranslation.loginCardTitle }}
+        {{ currentTranslation.bookingCardTitle }}
       </h1>
       <Card class="center-card" :class="[`page-${site}`]">
         <template #content>
@@ -25,6 +25,8 @@
             @click="nextPageOrSend"
             :icon="loading ? 'pi pi-spin pi-spinner' : ''"
             :class="{ loading: loading }"
+            :badge="buttonChangesBadge"
+            v-tooltip.left="buttonChangesTooltip"
           />
         </div>
       </div>
@@ -34,7 +36,7 @@
 
 <script lang="ts">
 // Foreign stuff
-import { computed, defineComponent, ref } from "vue";
+import { computed, defineComponent, ref, watch } from "vue";
 
 // Our stuff
 import { api, Course } from "@/api";
@@ -85,6 +87,23 @@ export default defineComponent({
       }
     });
 
+    const buttonChangesBadge = ref<string | null>(null);
+    const buttonChangesTooltip = ref<string | null>(null)
+
+    watch(CustomerService.appointments ,() => {
+      
+      const {added, withdrawn, updated} = CustomerService.getChangedAppointments()
+      const totalUpdated = added.length + withdrawn.length + updated.length
+      
+      if (totalUpdated > 0) {
+        buttonChangesBadge.value = totalUpdated.toString()
+        buttonChangesTooltip.value = `${added.length} added, ${updated.length} changed, ${withdrawn.length} removed` // TODO: better wording and translation
+      } else {
+        buttonChangesBadge.value = null
+        buttonChangesTooltip.value = 'No changes since last Send' // TODO: better wording and translation
+      }
+    }, { deep: true })
+
     const nextPageOrSend = async () => {
       if (site.value == 0) {
         site.value += 1;
@@ -92,7 +111,12 @@ export default defineComponent({
       } else if (site.value == 1) {
         // Todo: API Call
         loading.value = true;
-        await CustomerService.sendChanges();
+        if (store.bookingUrl.value) {
+          await CustomerService.sendChanges();
+        } else {
+          const newUrl = await CustomerService.newBooking()
+          router.replace(`/my-booking/${newUrl}`)
+        }
         loading.value = false;
       }
     };
@@ -157,6 +181,8 @@ export default defineComponent({
       history,
       allMandatoryFilled,
       missingFieldsTooltipText,
+      buttonChangesBadge,
+      buttonChangesTooltip
     };
   },
 });

@@ -1,7 +1,7 @@
 <template>
-  <Suspense @fallback="console.log(23)">
+  <Suspense>
     <template #default>
-      <div class="appointment-list">
+      <div class="appointment-list" v-bind="$attrs">
         <div
           id="appointments-field"
           class="p-inputtextarea p-inputtext p-component"
@@ -98,12 +98,11 @@ import { defineComponent, Ref, ref, computed } from "vue";
 
 // Our stuff
 import { currentTranslation } from "@/translations";
-import { api, Appointment, AppointmentStatus } from "@/api";
+import { Appointment, AppointmentStatus } from "@/api";
 import * as utils from "@/utils";
 
 // Foreign components
 import Button from "primevue/button";
-//import Chip from "primevue/chip";
 import ProgressSpinner from "primevue/progressspinner";
 
 // Our components
@@ -114,7 +113,6 @@ export default defineComponent({
   components: {
     InfoDialog,
     Button,
-    //Chip,
     ProgressSpinner,
   },
   props: {

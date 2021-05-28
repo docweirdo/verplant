@@ -12,6 +12,7 @@
         "
       />
     </div>
+    <!-- TODO: show spinner over Appointment list if CustomerService is updating -->
     <AppointmentList
       class="appointment-list"
       :bookingURL="null"
@@ -71,8 +72,6 @@ export default defineComponent({
     const infoDialog = ref(null);
     const displayAppointmentPicker = ref(false);
 
-    const rawAppointments = await api.getAppointments("abcde"); // TODO: Booking ID Logic
-    console.log(rawAppointments);
     const appointments : Ref<Appointment[]> = CustomerService.appointments;
 
     const createAppointment = (event: AppointmentSuggestion) => {

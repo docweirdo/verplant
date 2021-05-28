@@ -1,19 +1,27 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 import HomeCard from "../views/HomeCard.vue";
 import Page404 from "../views/404.vue";
+import store from "@/store";
 
 const routes: Array<RouteRecordRaw> = [
   {
     path: "/",
     name: "Home",
     component: HomeCard,
+    beforeEnter: (to, from, next) => {
+      store.bookingUrl.value = null
+      next()
+    }
   },
   {
-    path: "/my-booking/:bookingUrl", // can be accessed with $route.params.bookingUrl
-    name: "Home",
+    path: "/my-booking/:bookingUrl",
+    name: "Booking",
     component: HomeCard,
     beforeEnter: (to, from, next) => {
-      console.log(to.params.bookingUrl)
+      if (typeof to.params.bookingUrl === 'string') {
+        store.bookingUrl.value = to.params.bookingUrl
+      }
+      next()
     }
   },
   {
@@ -34,7 +42,9 @@ const routes: Array<RouteRecordRaw> = [
 
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
-  routes,
+  routes
 });
+
+(window as any).router = router
 
 export default router;
