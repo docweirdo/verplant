@@ -31,13 +31,13 @@ import Card from "primevue/card";
 export default defineComponent({
   name: "Login",
   components: {
-    Card
+    Card,
   },
   setup() {
     return {
-      currentTranslation
-    }
-  }
+      currentTranslation,
+    };
+  },
 });
 </script>
 
@@ -101,8 +101,6 @@ export default defineComponent({
   padding-top: 0px;
   margin: 0 auto;
 }
-
-
 </style>
 
 <style>

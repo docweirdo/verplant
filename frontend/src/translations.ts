@@ -26,6 +26,8 @@ export const currentTranslation = {
   },
   newAppointment: "Neuer Terminvorschlag",
   noAppointmentsMessage: "Keine Terminvorschläge.",
+  appointmentListNoChanges: "Keine Änderungen vorgenommen",
+  appointmentListChanges: "%d hinzugefügt, %d geändert, %d zurückgezogen",
   add: "Hinzufügen",
   next: "Weiter",
   send: "Abschicken",
@@ -44,5 +46,6 @@ export const currentTranslation = {
         Ihnen gemacht worden sind. Lassen Sie dieses Feld leer, um Vorschläge anzufragen. //TODO: Colorcodes`,
   },
   pageNotFoundTitle: "Seite nicht gefunden",
-  pageNotFoundText: "Die aufgerufene Adresse existiert nicht. Bitte versuchen Sie es erneut oder überprüfen, ob Sie den Link richtig geschrieben haben."
+  pageNotFoundText:
+    "Die aufgerufene Adresse existiert nicht. Bitte versuchen Sie es erneut oder überprüfen, ob Sie den Link richtig geschrieben haben.",
 };

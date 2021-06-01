@@ -22,6 +22,7 @@
       optionGroupChildren="courses"
       v-bind:placeholder="currentTranslation.selectedCoursePlaceholder"
       v-bind:filter="true"
+      :disabled="store.bookingUrl.value"
     />
     <ProgressSpinner v-else id="course-spinner" />
     <hr />
@@ -38,11 +39,13 @@
         id="first-name"
         type="text"
         v-model="store.contactInformations.firstname"
+        :disabled="store.bookingUrl.value"
       />
       <InputText
         id="last-name"
         type="text"
         v-model="store.contactInformations.lastname"
+        :disabled="store.bookingUrl.value"
       />
     </div>
     <div class="contact-1 split-lwi">
@@ -59,11 +62,13 @@
         id="mail"
         type="email"
         v-model="store.contactInformations.email"
+        :disabled="store.bookingUrl.value"
       />
       <InputText
         id="phone"
         type="tel"
         v-model="store.contactInformations.phone"
+        :disabled="store.bookingUrl.value"
       />
     </div>
     <div class="school-infos split-lwi">
@@ -80,11 +85,13 @@
         id="organisation"
         type="text"
         v-model="store.contactInformations.organisation"
+        :disabled="store.bookingUrl.value"
       />
       <InputText
         id="group"
         type="text"
         v-model="store.contactInformations.class"
+        :disabled="store.bookingUrl.value"
       />
     </div>
     <div class="group-infos split-lwi">
@@ -96,6 +103,7 @@
         id="group-size"
         type="number"
         v-model="store.contactInformations.groupSize"
+        :disabled="store.bookingUrl.value"
       />
     </div>
     <!-- footer of card -->
@@ -107,6 +115,7 @@
         id="legalNotice"
         v-model="store.contactInformations.acceptedLegalNotice"
         :binary="true"
+        :disabled="store.bookingUrl.value"
       />
       <label for="legalNotice" v-html="currentTranslation.legalNotice"></label>
     </div>
@@ -115,7 +124,7 @@
 
 <script lang="ts">
 // Foreign stuff
-import { computed, defineComponent, ref } from "vue";
+import { computed, defineComponent, ref, watch } from "vue";
 
 // Our stuff
 import { api, Course, AppointmentSuggestion, AppointmentStatus } from "@/api";
@@ -138,32 +147,48 @@ export default defineComponent({
     InputText,
     Dropdown,
     Checkbox,
-    ProgressSpinner
+    ProgressSpinner,
   },
 
   async setup() {
-    const apiCoursePromise = api.getCourses();
-    const selectedCourse = ref(null);
+    const allCourses = store.allCourses;
+    const selectedCourse = computed<Course | undefined>({
+      get: () => {
+        const a = store.allCourses.value.find(course => course.id === store.contactInformations.selectedCourse)
+        console.log(a)
+        return a
+      },
+      set: (val?: Course) => {
+        console.log(val);
+        
+        store.contactInformations.selectedCourse = val?.id
+      }
+    });
     const infoDialog = ref(null);
 
     const courseTypes: Map<string, Course[]> = new Map();
     const groupedCourses = ref<{ courses: Course[]; groupType: string }[]>([]);
 
-    apiCoursePromise.then(apiResult => {
+    const onCourseUpdate = (allCoursesUpdate: Course[]) => {
       // Split courses after types
-      for (const result of apiResult) {
+      for (const result of allCoursesUpdate) {
         const cType = result.course_type ?? currentTranslation.miscCourseType;
         const c = courseTypes.get(cType);
         if (c) c.push(result);
         else courseTypes.set(cType, [result]);
       }
+      console.log('setting new groupedCourses')
       for (const [key, value] of courseTypes.entries()) {
         groupedCourses.value.push({
           groupType: key,
           courses: value,
         });
       }
-    })
+    }
+
+    onCourseUpdate(store.allCourses.value)
+    watch(allCourses, onCourseUpdate);
+
 
     return {
       currentTranslation,
@@ -197,7 +222,6 @@ export default defineComponent({
   grid-template-columns: 1fr 1fr;
   column-gap: 0.5em;
 }
-
 
 .info-icon {
   cursor: unset;
@@ -242,7 +266,6 @@ p {
     grid-row-start: 3;
   }
 }
-
 </style>
 
 <style>

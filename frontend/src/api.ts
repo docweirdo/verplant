@@ -1,5 +1,4 @@
-import store from '@/store'
-
+import store from "@/store";
 
 export interface Course {
   id: number;
@@ -34,6 +33,18 @@ export interface Appointment {
   proposer_id?: number;
 }
 
+export interface BookingData {
+  firstname: string;
+  lastname: string;
+  email: string;
+  phone: string;
+  organisation: string;
+  group: string;
+  acceptedLegalNotice: boolean;
+  groupSize: number;
+  selectedCourse?: number;
+}
+
 interface Api {
   getCourses(): Promise<Course[]>;
   getAppointments(bookingURL: string): Promise<Appointment[]>;
@@ -43,11 +54,17 @@ interface Api {
   login(email: string, password: string): Promise<boolean>;
   updateAppointments(bookingUrl: string, updated: Appointment[]): Promise<void>;
   addAppointments(bookingUrl: string, added: Appointment[]): Promise<void>;
-  withdrawAppointments(bookingUrl: string, withdrawn: Appointment[]): Promise<void>;
+  withdrawAppointments(
+    bookingUrl: string,
+    withdrawn: Appointment[]
+  ): Promise<void>;
   /**
    * returns the new URL
    */
-  createNewBooking(customerInfos: typeof store.contactInformations): Promise<string>;
+  createNewBooking(
+    customerInfos: BookingData
+  ): Promise<string>;
+  getBookingInfo(bookingUrl: string): Promise<BookingData>;
 }
 
 type ApiCalls = keyof Api;
@@ -55,42 +72,41 @@ type AsyncFuncType = (...args: any[]) => Promise<any>;
 class FakeApi implements Api {
   private loggedIn = false;
 
-  private fakeUrlAppointments: Appointment[] = []
-  private fakeAppointmentId = 0 
+  private fakeUrlAppointments: Appointment[] = [];
+  private fakeAppointmentId = 0;
 
   /**
    * @param requestDelay fetch delay in ms
    */
   constructor(requestDelay?: number) {
-    (window as any).fakeApi = this
-    if (typeof requestDelay === 'number') {
+    (window as any).fakeApi = this;
+    if (typeof requestDelay === "number") {
       // !!! only apply to async functions !!!
-      const delayedFunctions: (ApiCalls)[] = [
-        'addAppointments',
-        'createNewBooking',
-        'getAppointments',
-        'getCourses',
-        'login',
-        'updateAppointments',
-        'withdrawAppointments'
-      ]
-  
+      const delayedFunctions: ApiCalls[] = [
+        "addAppointments",
+        "createNewBooking",
+        "getAppointments",
+        "getCourses",
+        "login",
+        "updateAppointments",
+        "withdrawAppointments",
+      ];
+
       for (const funcName of delayedFunctions) {
-        
-        const orig = this[funcName] as AsyncFuncType
+        const orig = this[funcName] as AsyncFuncType;
         (this[funcName] as AsyncFuncType) = (...args: any[]) => {
           return new Promise((resolve, reject) => {
-            console.log('called ' + funcName, args);
-            
+            console.log("called " + funcName, args);
+
             orig.call(this, ...args).then((res: any) => {
               setTimeout(() => {
                 console.log(`resolved ${funcName}`, res);
-                
-                resolve(res)
-              }, requestDelay)
-            })
-          })
-        }
+
+                resolve(res);
+              }, requestDelay);
+            });
+          });
+        };
       }
     }
   }
@@ -130,8 +146,7 @@ class FakeApi implements Api {
   }
 
   getAppointments(bookingURL: string): Promise<Appointment[]> {
-
-    if (bookingURL === 'filled') {
+    if (bookingURL === "filled") {
       return new Promise((resolve) => {
         resolve([
           {
@@ -186,54 +201,95 @@ class FakeApi implements Api {
         ]);
       });
     }
-    
-    if (bookingURL === 'fake-url') {
-      return Promise.resolve(this.fakeUrlAppointments)
+
+    if (bookingURL === "fake-url") {
+      return Promise.resolve(this.fakeUrlAppointments);
     }
 
-    return Promise.reject({error: 'Unknown URL'}) // TODO: typing for errors
+    return Promise.reject({ error: "Unknown URL" }); // TODO: typing for errors
   }
 
-  async updateAppointments(bookingURL : string, updated : Appointment[]): Promise<void> {
-    console.log('updated appointments', updated);
-    if (bookingURL === 'fake-url') {
+  async getBookingInfo(
+    bookingUrl: string
+  ): Promise<typeof store.contactInformations> {
+    if (bookingUrl === "filled") {
+      return Promise.resolve({
+        acceptedLegalNotice: true,
+        email: "max.mustermann@test.de",
+        firstname: "Max",
+        lastname: "Mustermann",
+        group: "Klasse 5A",
+        groupSize: 12,
+        organisation: "Kita Kunterbunt",
+        phone: "0176 123456",
+        selectedCourse: 1
+      });
+    }
+
+    return Promise.reject("unknown url");
+  }
+
+  async updateAppointments(
+    bookingURL: string,
+    updated: Appointment[]
+  ): Promise<void> {
+    console.log("updated appointments", updated);
+    if (bookingURL === "fake-url") {
       // replaced all from updated in list
-      this.fakeUrlAppointments = this.fakeUrlAppointments.map(appt => {
-        const updatedAppt = updated.find(uAppt => uAppt.id === appt.id);
-        return updatedAppt ?? appt
+      this.fakeUrlAppointments = this.fakeUrlAppointments.map((appt) => {
+        const updatedAppt = updated.find((uAppt) => uAppt.id === appt.id);
+        return updatedAppt ?? appt;
       });
     }
     return Promise.resolve();
   }
 
-  async addAppointments(bookingURL : string, added : Appointment[]): Promise<void> {
-    console.log('added appointments', added);
-    if (bookingURL === 'fake-url') {
-      this.fakeUrlAppointments = [...this.fakeUrlAppointments, ...added.map(appt => {
-        appt.id = this.fakeAppointmentId++;
-        appt.proposer_id = 1
-        return appt
-      })]
+  async addAppointments(
+    bookingURL: string,
+    added: Appointment[]
+  ): Promise<void> {
+    console.log("added appointments", added);
+    if (bookingURL === "fake-url") {
+      this.fakeUrlAppointments = [
+        ...this.fakeUrlAppointments,
+        ...added.map((appt) => {
+          appt.id = this.fakeAppointmentId++;
+          appt.proposer_id = 1;
+          return appt;
+        }),
+      ];
     }
     return Promise.resolve();
   }
 
-  async withdrawAppointments(bookingURL : string, withdrawn : Appointment[]): Promise<void> {
-    console.log('withdrawn appointments', withdrawn);
-    if (bookingURL === 'fake-url') {
-      this.fakeUrlAppointments = this.fakeUrlAppointments.filter(appt => !withdrawn.find(wAppt => wAppt.id === appt.id))
+  async withdrawAppointments(
+    bookingURL: string,
+    withdrawn: Appointment[]
+  ): Promise<void> {
+    console.log("withdrawn appointments", withdrawn);
+    if (bookingURL === "fake-url") {
+      this.fakeUrlAppointments = this.fakeUrlAppointments.filter(
+        (appt) => !withdrawn.find((wAppt) => wAppt.id === appt.id)
+      );
     }
     return Promise.resolve();
   }
 
-  createNewBooking(customerInfos: typeof store.contactInformations): Promise<string> {
-    console.log('createNewBooking', customerInfos);
-    return Promise.resolve('fake-url');
+  createNewBooking(
+    customerInfos: typeof store.contactInformations
+  ): Promise<string> {
+    console.log("createNewBooking", customerInfos);
+    return Promise.resolve("fake-url");
   }
-  
 }
 
 class HttpApi implements Api {
+
+  getBookingInfo(bookingUrl: string): Promise<BookingData> {
+    throw new Error("Method not implemented.");
+  }
+
+
   async getCourses(): Promise<Course[]> {
     const result = await fetch("/api/courses", { credentials: "include" });
     const obj = await result.json();
@@ -272,25 +328,35 @@ class HttpApi implements Api {
     });
   }
 
-  async updateAppointments(bookingURL : string, updated : Appointment[]): Promise<void> {
-   
+  async updateAppointments(
+    bookingURL: string,
+    updated: Appointment[]
+  ): Promise<void> {
     return Promise.resolve();
   }
 
-  async addAppointments(bookingURL : string, added : Appointment[]): Promise<void> {
-    console.log('added appointments', added);
-    
+  async addAppointments(
+    bookingURL: string,
+    added: Appointment[]
+  ): Promise<void> {
+    console.log("added appointments", added);
+
     return Promise.resolve();
   }
 
-  async withdrawAppointments(bookingURL : string, withdrawn : Appointment[]): Promise<void> {
-    console.log('withdrawn appointments', withdrawn);
-    
+  async withdrawAppointments(
+    bookingURL: string,
+    withdrawn: Appointment[]
+  ): Promise<void> {
+    console.log("withdrawn appointments", withdrawn);
+
     return Promise.resolve();
   }
 
-  async createNewBooking(args: typeof store.contactInformations): Promise<string> {
-    return Promise.resolve("safgeasg")
+  async createNewBooking(
+    args: BookingData
+  ): Promise<string> {
+    return Promise.resolve("safgeasg");
   }
 }
 

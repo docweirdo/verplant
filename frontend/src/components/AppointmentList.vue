@@ -131,23 +131,22 @@ export default defineComponent({
 
     // Determine all Selectors by available Stati
     const selectors = ref(
-      Object.entries(AppointmentStatus)
-        .map(([_k, v]) => {
-          return {
-            display: currentTranslation.appointmentState[v],
-            type: v,
-            active: true,
-          };
-        })
+      Object.entries(AppointmentStatus).map(([_k, v]) => {
+        return {
+          display: currentTranslation.appointmentState[v],
+          type: v,
+          active: true,
+        };
+      })
     );
 
     // Filter for each selector if at least one appointment has the status
     const visibleSelectors = computed(() => {
       return selectors.value.filter((selector) => {
-          return props.appointments.some(
-            (apptmnt) => apptmnt.status === selector.type
-          );
-        })
+        return props.appointments.some(
+          (apptmnt) => apptmnt.status === selector.type
+        );
+      });
     });
 
     // Apply filters
@@ -225,7 +224,6 @@ export default defineComponent({
     overflow-y: unset;
   }
 }
-
 
 .p-card {
   box-shadow: 0 2px 1px -1px rgba(0, 0, 0, 0.2), 0 1px 5px 0 rgba(0, 0, 0, 0.14),
@@ -343,18 +341,15 @@ label[for="filters"] {
   color: white;
 }
 
-
 /* === MOBILE === */
 
 @media only screen and (max-width: 520px) {
   .p-card {
+    grid-template-columns: 1fr 1fr 1fr;
 
-  grid-template-columns: 1fr 1fr 1fr;
-  
-
-  grid-template-areas:
-    "date status status"
-    "time controls controls";
+    grid-template-areas:
+      "date status status"
+      "time controls controls";
   }
 
   .p-card .status::before {

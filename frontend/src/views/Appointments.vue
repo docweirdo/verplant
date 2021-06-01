@@ -46,9 +46,15 @@
 import { defineComponent, ref, Ref } from "vue";
 
 // Our stuff
-import { api, Course, AppointmentSuggestion, AppointmentStatus, Appointment } from "@/api";
+import {
+  api,
+  Course,
+  AppointmentSuggestion,
+  AppointmentStatus,
+  Appointment,
+} from "@/api";
 import { currentTranslation } from "@/translations";
-import CustomerService from '@/CustomerService'
+import CustomerService from "@/CustomerService";
 
 // Foreign Components
 import Dialog from "primevue/dialog";
@@ -72,7 +78,7 @@ export default defineComponent({
     const infoDialog = ref(null);
     const displayAppointmentPicker = ref(false);
 
-    const appointments : Ref<Appointment[]> = CustomerService.appointments;
+    const appointments: Ref<Appointment[]> = CustomerService.appointments;
 
     const createAppointment = (event: AppointmentSuggestion) => {
       console.log(event);

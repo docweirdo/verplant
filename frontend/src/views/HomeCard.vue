@@ -37,6 +37,7 @@
 <script lang="ts">
 // Foreign stuff
 import { computed, defineComponent, ref, watch } from "vue";
+import { sprintf } from "sprintf-js";
 
 // Our stuff
 import { api, Course } from "@/api";
@@ -88,21 +89,34 @@ export default defineComponent({
     });
 
     const buttonChangesBadge = ref<string | null>(null);
-    const buttonChangesTooltip = ref<string | null>(null)
+    const buttonChangesTooltip = ref<string | null>(null);
 
-    watch(CustomerService.appointments ,() => {
-      
-      const {added, withdrawn, updated} = CustomerService.getChangedAppointments()
-      const totalUpdated = added.length + withdrawn.length + updated.length
-      
-      if (totalUpdated > 0) {
-        buttonChangesBadge.value = totalUpdated.toString()
-        buttonChangesTooltip.value = `${added.length} added, ${updated.length} changed, ${withdrawn.length} removed` // TODO: better wording and translation
-      } else {
-        buttonChangesBadge.value = null
-        buttonChangesTooltip.value = 'No changes since last Send' // TODO: better wording and translation
-      }
-    }, { deep: true })
+    watch(
+      CustomerService.appointments,
+      () => {
+        const {
+          added,
+          withdrawn,
+          updated,
+        } = CustomerService.getChangedAppointments();
+        const totalUpdated = added.length + withdrawn.length + updated.length;
+
+        if (totalUpdated > 0) {
+          buttonChangesBadge.value = totalUpdated.toString();
+          buttonChangesTooltip.value = sprintf(
+            currentTranslation.appointmentListChanges,
+            added.length,
+            updated.length,
+            withdrawn.length
+          );
+        } else {
+          buttonChangesBadge.value = null;
+          buttonChangesTooltip.value =
+            currentTranslation.appointmentListNoChanges; // TODO: better wording and translation
+        }
+      },
+      { deep: true }
+    );
 
     const nextPageOrSend = async () => {
       if (site.value == 0) {
@@ -114,8 +128,8 @@ export default defineComponent({
         if (store.bookingUrl.value) {
           await CustomerService.sendChanges();
         } else {
-          const newUrl = await CustomerService.newBooking()
-          router.replace(`/my-booking/${newUrl}`)
+          const newUrl = await CustomerService.newBooking();
+          router.replace(`/my-booking/${newUrl}`);
         }
         loading.value = false;
       }
@@ -182,7 +196,7 @@ export default defineComponent({
       allMandatoryFilled,
       missingFieldsTooltipText,
       buttonChangesBadge,
-      buttonChangesTooltip
+      buttonChangesTooltip,
     };
   },
 });

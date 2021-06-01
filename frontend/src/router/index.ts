@@ -9,20 +9,20 @@ const routes: Array<RouteRecordRaw> = [
     name: "Home",
     component: HomeCard,
     beforeEnter: (to, from, next) => {
-      store.bookingUrl.value = null
-      next()
-    }
+      store.bookingUrl.value = null;
+      next();
+    },
   },
   {
     path: "/my-booking/:bookingUrl",
     name: "Booking",
     component: HomeCard,
     beforeEnter: (to, from, next) => {
-      if (typeof to.params.bookingUrl === 'string') {
-        store.bookingUrl.value = to.params.bookingUrl
+      if (typeof to.params.bookingUrl === "string") {
+        store.bookingUrl.value = to.params.bookingUrl;
       }
-      next()
-    }
+      next();
+    },
   },
   {
     path: "/login",
@@ -33,18 +33,18 @@ const routes: Array<RouteRecordRaw> = [
     component: () =>
       import(/* webpackChunkName: "about" */ "../views/Login.vue"),
   },
-  { 
-    path: '/:pathMatch(.*)*', // see https://next.router.vuejs.org/guide/migration/#removed-star-or-catch-all-routes why * doesn't work anymore
-    name: '404', 
-    component: Page404 
-  }
+  {
+    path: "/:pathMatch(.*)*", // see https://next.router.vuejs.org/guide/migration/#removed-star-or-catch-all-routes why * doesn't work anymore
+    name: "404",
+    component: Page404,
+  },
 ];
 
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
-  routes
+  routes,
 });
 
-(window as any).router = router
+(window as any).router = router;
 
 export default router;

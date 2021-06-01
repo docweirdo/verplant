@@ -4,21 +4,23 @@
   </Suspense>
 </template>
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent } from "vue";
 
 export default defineComponent({
   mounted() {
     setTimeout(() => {
       // remove loader page after home and all child components are mounted (+ 1s for asthetics)
-      const loader = document.querySelector('#loader-container') as HTMLDivElement;
-      loader.style.opacity = '0'
+      const loader = document.querySelector(
+        "#loader-container"
+      ) as HTMLDivElement;
+      loader.style.opacity = "0";
       setTimeout(() => {
         loader.remove();
-        console.log('removed loader container');
+        console.log("removed loader container");
       }, 500); // opacity transition is 0.5s long
     }, 500);
-  }
-})
+  },
+});
 </script>
 
 <style>
