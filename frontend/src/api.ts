@@ -360,5 +360,5 @@ class HttpApi implements Api {
   }
 }
 
-//export const api: Api = new FakeApi(2000);
-export const api: Api = new HttpApi();
+export const api: Api = new FakeApi(2000);
+//export const api: Api = new HttpApi();

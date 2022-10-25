@@ -59,6 +59,7 @@ import { isEmail } from "@/utils";
 
 export default defineComponent({
   name: "HomeCard",
+  props: ['site'],
   components: {
     Card,
     Button,
@@ -68,8 +69,8 @@ export default defineComponent({
   directives: {
     tooltip: Tooltip,
   },
-  setup() {
-    const site = ref(0);
+  setup(props) {
+    const site = ref(props.site);
 
     (window as any).site = site;
 
@@ -121,7 +122,7 @@ export default defineComponent({
     const nextPageOrSend = async () => {
       if (site.value == 0) {
         site.value += 1;
-        history.pushState("fakePush", "");
+        history.pushState("ContactInformation", "");
       } else if (site.value == 1) {
         // Todo: API Call
         loading.value = true;
@@ -150,7 +151,7 @@ export default defineComponent({
       console.log("popState Event fired", event);
       if (site.value == 1) {
         site.value = 0;
-      } else if (event.state === "fakePush" && site.value == 0) {
+      } else if (event.state === "ContactInformation" && site.value == 0) {
         site.value = 1;
       } else {
         window.removeEventListener("popstate", popStateEventListener);

@@ -8,6 +8,7 @@ const routes: Array<RouteRecordRaw> = [
     path: "/",
     name: "Home",
     component: HomeCard,
+    props: { site: 0 },
     beforeEnter: (to, from, next) => {
       store.bookingUrl.value = null;
       next();
@@ -17,9 +18,11 @@ const routes: Array<RouteRecordRaw> = [
     path: "/my-booking/:bookingUrl",
     name: "Booking",
     component: HomeCard,
+    props: { site: 1 },
     beforeEnter: (to, from, next) => {
       if (typeof to.params.bookingUrl === "string") {
         store.bookingUrl.value = to.params.bookingUrl;
+        history.pushState("ContactInformation", "");
       }
       next();
     },
