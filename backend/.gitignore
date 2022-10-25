@@ -15,3 +15,6 @@ Cargo.lock
 
 # Database used for developing but still
 *.sqlite3
+
+# MacOS Finder Files
+*.DS_Store

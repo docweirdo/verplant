@@ -1,4 +1,6 @@
-table! {
+// @generated automatically by Diesel CLI.
+
+diesel::table! {
     appointments (id) {
         id -> Integer,
         start_time -> Text,
@@ -10,7 +12,7 @@ table! {
     }
 }
 
-table! {
+diesel::table! {
     books (id) {
         id -> Integer,
         url -> Text,
@@ -19,14 +21,14 @@ table! {
     }
 }
 
-table! {
+diesel::table! {
     conducts (provider_id, course_id) {
         provider_id -> Integer,
         course_id -> Integer,
     }
 }
 
-table! {
+diesel::table! {
     courses (id) {
         id -> Integer,
         name -> Text,
@@ -36,7 +38,7 @@ table! {
     }
 }
 
-table! {
+diesel::table! {
     customers (person_id) {
         person_id -> Integer,
         organisation -> Text,
@@ -44,7 +46,7 @@ table! {
     }
 }
 
-table! {
+diesel::table! {
     persons (id) {
         id -> Integer,
         firstname -> Text,
@@ -54,7 +56,7 @@ table! {
     }
 }
 
-table! {
+diesel::table! {
     providers (person_id) {
         person_id -> Integer,
         password_hash -> Nullable<Text>,
@@ -62,23 +64,23 @@ table! {
     }
 }
 
-table! {
+diesel::table! {
     rooms (id) {
         id -> Integer,
         name -> Text,
     }
 }
 
-joinable!(appointments -> books (books_id));
-joinable!(appointments -> persons (proposer_id));
-joinable!(appointments -> rooms (room_id));
-joinable!(books -> courses (course_id));
-joinable!(books -> customers (customer_id));
-joinable!(courses -> rooms (default_room_id));
-joinable!(customers -> persons (person_id));
-joinable!(providers -> persons (person_id));
+diesel::joinable!(appointments -> books (books_id));
+diesel::joinable!(appointments -> persons (proposer_id));
+diesel::joinable!(appointments -> rooms (room_id));
+diesel::joinable!(books -> courses (course_id));
+diesel::joinable!(books -> customers (customer_id));
+diesel::joinable!(courses -> rooms (default_room_id));
+diesel::joinable!(customers -> persons (person_id));
+diesel::joinable!(providers -> persons (person_id));
 
-allow_tables_to_appear_in_same_query!(
+diesel::allow_tables_to_appear_in_same_query!(
     appointments,
     books,
     conducts,

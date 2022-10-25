@@ -26,6 +26,7 @@ class CustomerService {
         await this.fetchBookingInfo();
         await this.fetchAppointments();
       } catch (e) {
+        console.log(e);
         router.push('/TODO error handling'); // TODO: error handling
       }
     }
@@ -63,8 +64,7 @@ class CustomerService {
    */
   async newBooking(): Promise<string> {
     const url = await api.createNewBooking(toRaw(store.contactInformations));
-    console.log(url);
-
+    
     await this.sendChanges(url);
     return url;
   }
