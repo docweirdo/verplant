@@ -285,8 +285,11 @@ class FakeApi implements Api {
 
 class HttpApi implements Api {
 
-  getBookingInfo(bookingUrl: string): Promise<BookingData> {
-    throw new Error("Method not implemented.");
+  async getBookingInfo(bookingURL: string): Promise<BookingData> {
+    const result = await fetch(`/api/bookings/url/${bookingURL}/info`);
+    const obj = await result.json();
+
+    return obj;
   }
 
 
@@ -312,7 +315,7 @@ class HttpApi implements Api {
   }
 
   async getAppointments(bookingURL: string): Promise<Appointment[]> {
-    const result = await fetch(`/api/bookings/${bookingURL}/appointments`, {
+    const result = await fetch(`/api/bookings/url/${bookingURL}/appointments`, {
       credentials: "include",
     });
     const obj = (await result.json()) as any[];
@@ -360,5 +363,5 @@ class HttpApi implements Api {
   }
 }
 
-export const api: Api = new FakeApi(2000);
-//export const api: Api = new HttpApi();
+//export const api: Api = new FakeApi(2000);
+export const api: Api = new HttpApi();

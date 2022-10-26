@@ -1,10 +1,13 @@
 #![feature(proc_macro_hygiene, decl_macro)]
 
-#[macro_use] extern crate rocket;
+#[macro_use]
+extern crate rocket;
 
-#[macro_use] extern crate rocket_contrib;
+#[macro_use]
+extern crate rocket_contrib;
 
-#[macro_use] extern crate diesel;
+#[macro_use]
+extern crate diesel;
 
 use log::info;
 
@@ -13,9 +16,7 @@ pub mod http_api;
 
 use db::DBConn;
 
-
 fn main() {
-
     env_logger::init();
 
     info!("Server starting");

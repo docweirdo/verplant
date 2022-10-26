@@ -4,8 +4,7 @@ use rocket::{
     self,
     http::{Cookie, Cookies, Status},
     request::{FromRequest, Outcome},
-    Request,
-    Rocket
+    Request, Rocket,
 };
 use rocket_contrib::json::Json;
 use serde::{Deserialize, Serialize};
