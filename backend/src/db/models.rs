@@ -1,8 +1,9 @@
 use crate::db::schema::*;
+use diesel::{AsChangeset, Associations, Identifiable, Insertable, Queryable, Selectable};
 use serde::{Deserialize, Serialize};
 
-#[derive(Queryable, Debug, Insertable, Serialize, Identifiable, Associations)]
-#[table_name = "persons"]
+#[derive(Queryable, Debug, Insertable, Serialize, Identifiable, Selectable)]
+#[diesel(table_name = persons)]
 pub struct Person {
     pub id: i32,
     pub firstname: String,
@@ -11,9 +12,9 @@ pub struct Person {
     pub phone: Option<String>,
 }
 
-#[derive(Queryable, Debug, Insertable, Serialize, Identifiable, Associations)]
+#[derive(Queryable, Debug, Insertable, Serialize, Identifiable)]
 //#[belongs_to(Room, foreign_key = "default_room_id")] Uncomment later when Room Struct exists
-#[table_name = "courses"]
+#[diesel(table_name = courses)]
 pub struct Course {
     pub id: i32,
     pub name: String,
@@ -23,9 +24,9 @@ pub struct Course {
 }
 
 #[derive(Queryable, Debug, Serialize, Identifiable, Associations)]
-#[table_name = "providers"]
-#[belongs_to(Person, foreign_key = "person_id")]
-#[primary_key(person_id)]
+#[diesel(table_name = providers)]
+#[diesel(belongs_to(Person, foreign_key = person_id))]
+#[diesel(primary_key(person_id))]
 pub struct Provider {
     pub person_id: i32,
     pub password_hash: String,
@@ -33,11 +34,19 @@ pub struct Provider {
 }
 
 #[derive(
-    Queryable, Insertable, Debug, Serialize, Deserialize, Identifiable, Associations, AsChangeset,
+    Queryable,
+    Insertable,
+    Debug,
+    Serialize,
+    Deserialize,
+    Identifiable,
+    Associations,
+    AsChangeset,
+    Selectable,
 )]
-#[table_name = "appointments"]
-#[belongs_to(Person, foreign_key = "proposer_id")]
-#[primary_key(id)]
+#[diesel(table_name = appointments)]
+#[diesel(belongs_to(Person, foreign_key = proposer_id))]
+#[diesel(primary_key(id))]
 pub struct Appointment {
     pub id: i32,
     pub start_time: String,
@@ -49,10 +58,10 @@ pub struct Appointment {
 }
 
 #[derive(Queryable, Debug, Serialize, Identifiable, Associations)]
-#[table_name = "books"]
-#[belongs_to(Course, foreign_key = "course_id")]
-#[belongs_to(Customer, foreign_key = "course_id")]
-#[primary_key(id)]
+#[diesel(table_name = books)]
+#[diesel(belongs_to(Course, foreign_key = course_id))]
+#[diesel(belongs_to(Customer, foreign_key = course_id))]
+#[diesel(primary_key(id))]
 pub struct Booking {
     pub id: i32,
     pub url: String,
@@ -61,9 +70,9 @@ pub struct Booking {
 }
 
 #[derive(Queryable, Debug, Serialize, Identifiable, Associations)]
-#[table_name = "customers"]
-#[belongs_to(Person, foreign_key = "person_id")]
-#[primary_key(person_id)]
+#[diesel(table_name = customers)]
+#[diesel(belongs_to(Person, foreign_key = person_id))]
+#[diesel(primary_key(person_id))]
 pub struct Customer {
     pub person_id: i32,
     pub organisation: String,

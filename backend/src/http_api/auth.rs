@@ -1,12 +1,14 @@
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use log::{error, info, warn};
 use rocket::{
-    self,
-    http::{Cookie, Cookies, Status},
+    self, get,
+    http::{Cookie, CookieJar, Status},
+    post,
     request::{FromRequest, Outcome},
-    Request, Rocket,
+    routes,
+    serde::json::Json,
+    Build, Request, Rocket,
 };
-use rocket_contrib::json::Json;
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
 
@@ -16,7 +18,7 @@ use db::DatabaseError;
 
 const COOKIE_DURATION: u64 = 20 * 60;
 
-pub fn mount_endpoints(rocket: Rocket) -> Rocket {
+pub fn mount_endpoints(rocket: Rocket<Build>) -> Rocket<Build> {
     rocket.mount("/api/auth/", routes![login, test])
 }
 
@@ -34,11 +36,15 @@ struct JWTClaims {
 }
 
 #[post("/login", data = "<credentials>")]
-pub fn login(mut cookies: Cookies, credentials: Json<Credentials>, conn: DBConn) -> Status {
+pub async fn login(
+    cookie_jar: &CookieJar<'_>,
+    credentials: Json<Credentials>,
+    conn: DBConn,
+) -> Status {
     let email = credentials.email.trim();
     let password = credentials.password.trim();
 
-    let id = match db::verify_user(&conn, email, password) {
+    let id = match db::verify_user(&conn, email, password).await {
         Ok(id) => id,
         Err(DatabaseError::PasswordMatch) => {
             info!(target: "/login", "wrong password for email {}: {}", email, DatabaseError::PasswordMatch);
@@ -78,7 +84,7 @@ pub fn login(mut cookies: Cookies, credentials: Json<Credentials>, conn: DBConn)
     };
 
     //TODO: Set secure only
-    cookies.add(
+    cookie_jar.add(
         Cookie::build("jwt", token)
             .http_only(true)
             .permanent()
@@ -90,8 +96,10 @@ pub fn login(mut cookies: Cookies, credentials: Json<Credentials>, conn: DBConn)
 }
 
 #[get("/test/<password>")]
-pub fn test(password: String, conn: DBConn) -> Result<(), Status> {
-    db::set_password(&conn, 1, &password).map_err(|_| Status::InternalServerError)
+pub async fn test(password: String, conn: DBConn) -> Result<(), Status> {
+    db::set_password(&conn, 1, &password)
+        .await
+        .map_err(|_| Status::InternalServerError)
 }
 
 pub struct ProviderGuard {
@@ -99,19 +107,15 @@ pub struct ProviderGuard {
     pub is_admin: bool,
 }
 
-impl<'a, 'r> FromRequest<'a, 'r> for ProviderGuard {
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for ProviderGuard {
     type Error = ();
 
     //TODO: Change if lets to match statements to be able to use errors in warnings
-    fn from_request(request: &'a Request<'r>) -> Outcome<ProviderGuard, ()> {
-        let cookies: Cookies = if let Outcome::Success(cookies) = request.guard::<Cookies>() {
-            cookies
-        } else {
-            warn!(target: "ProviderGuard", "no cookies");
-            return Outcome::Failure((Status::Unauthorized, ()));
-        };
+    async fn from_request(request: &'r Request<'_>) -> Outcome<ProviderGuard, ()> {
+        let cookie_jar: &CookieJar<'r> = request.cookies();
 
-        let user_id: i32 = if let Some(cookie) = cookies.get("jwt") {
+        let user_id: i32 = if let Some(cookie) = cookie_jar.get("jwt") {
             if let Ok(token_data) = decode::<JWTClaims>(
                 cookie.value(),
                 &DecodingKey::from_secret("secret".as_ref()),
@@ -127,14 +131,14 @@ impl<'a, 'r> FromRequest<'a, 'r> for ProviderGuard {
             return Outcome::Failure((Status::Unauthorized, ()));
         };
 
-        let conn = if let Outcome::Success(conn) = request.guard::<DBConn>() {
+        let conn = if let Outcome::Success(conn) = request.guard::<DBConn>().await {
             conn
         } else {
             warn!(target: "ProviderGuard", "no DBConn");
             return Outcome::Failure((Status::InternalServerError, ()));
         };
 
-        match db::is_user_admin(conn, user_id) {
+        match db::is_user_admin(conn, user_id).await {
             Ok(is_admin) => Outcome::Success(ProviderGuard {
                 person_id: user_id,
                 is_admin,

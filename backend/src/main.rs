@@ -1,27 +1,18 @@
-#![feature(proc_macro_hygiene, decl_macro)]
-
-#[macro_use]
-extern crate rocket;
-
-#[macro_use]
-extern crate rocket_contrib;
-
-#[macro_use]
-extern crate diesel;
-
 use log::info;
 
 pub mod db;
 pub mod http_api;
+use rocket::launch;
 
 use db::DBConn;
 
-fn main() {
+#[launch]
+fn rocket() -> _ {
     env_logger::init();
 
     info!("Server starting");
-    let mut rocket = rocket::ignite().attach(DBConn::fairing());
+    let mut rocket = rocket::build().attach(DBConn::fairing());
     rocket = http_api::mount_endpoints(rocket);
     rocket = http_api::auth::mount_endpoints(rocket);
-    rocket.launch();
+    rocket
 }

@@ -1,6 +1,8 @@
-use crate::db::schema::*;
+use super::schema::*;
+use diesel::Insertable;
+
 #[derive(Debug, Insertable)]
-#[table_name = "appointments"]
+#[diesel(table_name = appointments)]
 pub struct NewAppointment {
     pub start_time: String,
     pub end_time: String,

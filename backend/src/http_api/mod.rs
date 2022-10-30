@@ -1,4 +1,4 @@
-use rocket::Rocket;
+use rocket::{Build, Rocket};
 use serde::Deserialize;
 
 pub mod auth;
@@ -12,7 +12,7 @@ pub struct AppointmentSuggestion {
     pub room_id: Option<i32>,
 }
 
-pub fn mount_endpoints(mut rocket: Rocket) -> Rocket {
+pub fn mount_endpoints(mut rocket: Rocket<Build>) -> Rocket<Build> {
     rocket = customer::mount_endpoints(rocket);
     authenticated::mount_endpoints(rocket)
 }

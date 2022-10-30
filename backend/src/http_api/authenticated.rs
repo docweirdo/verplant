@@ -1,7 +1,7 @@
 use log::{error, info, warn};
 use rocket::http::Status;
-use rocket::Rocket;
-use rocket_contrib::json::Json;
+use rocket::serde::json::Json;
+use rocket::{delete, patch, post, routes, Build, Rocket};
 
 use crate::db;
 use crate::db::models::Appointment;
@@ -9,7 +9,7 @@ use crate::db::{BookingReference, DBConn, DatabaseError};
 use crate::http_api::auth::ProviderGuard;
 use crate::http_api::AppointmentSuggestion;
 
-pub fn mount_endpoints(rocket: Rocket) -> Rocket {
+pub fn mount_endpoints(rocket: Rocket<Build>) -> Rocket<Build> {
     rocket.mount(
         "/api",
         routes![
@@ -21,7 +21,7 @@ pub fn mount_endpoints(rocket: Rocket) -> Rocket {
 }
 
 #[post("/bookings/id/<booking_id>", data = "<new_appointments>")]
-pub fn add_appointments_by_id(
+pub async fn add_appointments_by_id(
     provider: ProviderGuard,
     conn: DBConn,
     booking_id: i32,
@@ -34,7 +34,9 @@ pub fn add_appointments_by_id(
         booking_id,
         new_appointments.0,
         provider.person_id,
-    ) {
+    )
+    .await
+    {
         Ok(_) => Ok(()),
         Err(DatabaseError::DieselError(e)) => {
             error!(target: "POST /bookings/url/<booking_url>", "database error for id {}: {}", booking_id, e);
@@ -56,7 +58,7 @@ pub fn add_appointments_by_id(
 }
 
 #[patch("/bookings/id/<booking_id>", data = "<updated_appointments>")]
-pub fn update_appointments_by_id(
+pub async fn update_appointments_by_id(
     provider_guard: ProviderGuard,
     conn: DBConn,
     booking_id: i32,
@@ -69,7 +71,9 @@ pub fn update_appointments_by_id(
         BookingReference::BookingId(booking_id),
         updated_appointments.0,
         Some(provider_guard.person_id),
-    ) {
+    )
+    .await
+    {
         Ok(_) => Ok(()),
         Err(DatabaseError::DieselError(e)) => {
             error!(target: "PATCH /bookings/id/<booking_id>", "database error for id {}: {}", booking_id, e);
@@ -95,7 +99,7 @@ pub fn update_appointments_by_id(
 }
 
 #[delete("/bookings/id/<booking_id>", data = "<withdrawn_appointments>")]
-pub fn withdraw_appointments(
+pub async fn withdraw_appointments(
     provider_guard: ProviderGuard,
     conn: DBConn,
     booking_id: i32,
@@ -108,7 +112,9 @@ pub fn withdraw_appointments(
         BookingReference::BookingId(booking_id),
         withdrawn_appointments.0,
         Some(provider_guard.person_id),
-    ) {
+    )
+    .await
+    {
         Ok(_) => Ok(()),
         Err(DatabaseError::DieselError(e)) => {
             error!(target: "DELETE /bookings/id/<booking_id>", "database error for id {}: {}", booking_id, e);

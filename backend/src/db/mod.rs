@@ -1,6 +1,7 @@
-use diesel::{insert_into, prelude::*, update};
 use log::{error, info, trace};
 use pwhash::bcrypt;
+use rocket_sync_db_pools::database;
+use rocket_sync_db_pools::diesel::{insert_into, prelude::*, update};
 use thiserror::Error;
 
 pub mod insertable;
@@ -10,57 +11,76 @@ pub mod schema;
 use crate::http_api::AppointmentSuggestion;
 use insertable::*;
 use models::*;
-use schema::books::dsl::*;
-use schema::courses::dsl::*;
-use schema::customers::dsl::*;
-use schema::persons::dsl::*;
-use schema::providers::dsl::*;
+
+use schema::appointments::dsl as appointment_dsl;
+use schema::books::dsl as booking_dsl;
+use schema::courses::dsl as course_dsl;
+use schema::customers::dsl as customer_dsl;
+use schema::persons::dsl as person_dsl;
+use schema::providers::dsl as provider_dsl;
 
 #[database("sqlite_db")]
 pub struct DBConn(diesel::SqliteConnection);
 
 /// Returns the id if user is verified
-pub fn verify_user(conn: &DBConn, user_email: &str, password: &str) -> Result<i32, DatabaseError> {
-    // Maybe change Query to one with inner join
-    let user: Person = persons
-        .filter(email.eq(user_email))
-        .first::<Person>(&conn.0)
-        .map_err(diesel_to_no_entry)?;
+pub async fn verify_user(
+    conn: &DBConn,
+    user_email: &str,
+    password: &str,
+) -> Result<i32, DatabaseError> {
+    let user_email = user_email.to_owned();
+    let password = password.to_owned();
 
-    match Provider::belonging_to(&user)
-        .select(password_hash)
-        .first::<Option<String>>(&conn.0)?
-    {
-        Some(pw_hash) => {
-            if bcrypt::verify(password, &pw_hash) {
-                Ok(user.id)
-            } else {
-                Err(DatabaseError::PasswordMatch)
+    conn.run(move |c| {
+        match person_dsl::persons
+            .filter(person_dsl::email.eq(user_email))
+            .inner_join(provider_dsl::providers)
+            .select((provider_dsl::password_hash, provider_dsl::person_id))
+            .first::<(Option<String>, i32)>(c)
+            .map_err(diesel_to_no_entry)?
+        {
+            (Some(pw_hash), person_id) => {
+                if bcrypt::verify(password, &pw_hash) {
+                    Ok(person_id)
+                } else {
+                    Err(DatabaseError::PasswordMatch)
+                }
             }
+            _ => Err(DatabaseError::NoEntry),
         }
-        _ => Err(DatabaseError::NoEntry),
-    }
+    })
+    .await
 }
 
-pub fn set_password(conn: &DBConn, user_id: i32, password: &str) -> Result<(), DatabaseError> {
+pub async fn set_password(
+    conn: &DBConn,
+    user_id: i32,
+    password: &str,
+) -> Result<(), DatabaseError> {
     let hash: String = bcrypt::hash(password).unwrap();
 
-    update(providers.find(user_id))
-        .set(password_hash.eq(hash))
-        .execute(&conn.0)?;
-    info!("Set password for user {}", user_id);
+    conn.run(move |c| {
+        update(provider_dsl::providers.find(user_id))
+            .set(provider_dsl::password_hash.eq(hash))
+            .execute(c)?;
+        info!("Set password for user {}", user_id);
 
-    Ok(())
+        Ok(())
+    })
+    .await
 }
 
-pub fn is_user_admin(conn: DBConn, user_id: i32) -> Result<bool, DatabaseError> {
-    let result: bool = providers
-        .find(user_id)
-        .select(is_admin)
-        .first::<i32>(&conn.0)
-        .map_err(diesel_to_no_entry)?
-        != 0;
-    Ok(result)
+pub async fn is_user_admin(conn: DBConn, user_id: i32) -> Result<bool, DatabaseError> {
+    conn.run(move |c| {
+        let result: bool = provider_dsl::providers
+            .find(user_id)
+            .select(provider_dsl::is_admin)
+            .first::<i32>(c)
+            .map_err(diesel_to_no_entry)?
+            != 0;
+        Ok(result)
+    })
+    .await
 }
 
 #[derive(Error, Debug)]
@@ -86,73 +106,86 @@ pub fn diesel_to_no_entry(err: diesel::result::Error) -> DatabaseError {
 }
 
 /// returns the course info for frontend if successful
-pub fn get_booking_info(conn: &DBConn, booking_url: &str) -> Result<BookingInfo, DatabaseError> {
-    conn.transaction(|| {
-        let mut result: Vec<BookingInfo> = books
-            .filter(url.eq(booking_url))
-            .inner_join(customers.inner_join(persons))
-            .select((
-                schema::persons::firstname,
-                schema::persons::lastname,
-                schema::persons::email,
-                schema::persons::phone,
-                schema::customers::organisation,
-                schema::customers::class,
-                schema::books::course_id,
-            ))
-            .load::<BookingInfo>(&conn.0)?;
+pub async fn get_booking_info(
+    conn: &DBConn,
+    booking_url: &str,
+) -> Result<BookingInfo, DatabaseError> {
+    let booking_url = booking_url.to_owned();
 
-        match result.len() {
-            0 => Err(DatabaseError::NoEntry),
-            1 => Ok(result.remove(0)),
-            _ => Err(DatabaseError::Ambiguous),
-        }
+    conn.run(move |c| {
+        c.transaction(|c| {
+            let mut result: Vec<BookingInfo> = booking_dsl::books
+                .filter(booking_dsl::url.eq(booking_url))
+                .inner_join(customer_dsl::customers.inner_join(person_dsl::persons))
+                .select((
+                    person_dsl::firstname,
+                    person_dsl::lastname,
+                    person_dsl::email,
+                    person_dsl::phone,
+                    customer_dsl::organisation,
+                    customer_dsl::class,
+                    booking_dsl::course_id,
+                ))
+                .load::<BookingInfo>(c)?;
+
+            match result.len() {
+                0 => Err(DatabaseError::NoEntry),
+                1 => Ok(result.remove(0)),
+                _ => Err(DatabaseError::Ambiguous),
+            }
+        })
     })
+    .await
 }
 
 /// loads the appointments and the customer associated with the booking_url
-pub fn get_booking_appointments_by_url(
+pub async fn get_booking_appointments_by_url(
     conn: &DBConn,
     booking_url: &str,
 ) -> Result<(Vec<Appointment>, i32), DatabaseError> {
-    use schema::appointments::dsl::*;
+    let booking_url = booking_url.to_owned();
 
-    let customer: i32 = match books
-        .filter(url.eq(booking_url))
-        .select(customer_id)
-        .load::<i32>(&conn.0)
-    {
-        Ok(v) if v.is_empty() => return Err(DatabaseError::NoEntry),
-        Ok(v) if v.len() > 1 => return Err(DatabaseError::Ambiguous),
-        Ok(mut v) => v.remove(0),
-        Err(e) => return Err(e.into()),
-    };
+    conn.run(|c| {
+        c.transaction(|c| {
+            let customer: i32 = match booking_dsl::books
+                .filter(booking_dsl::url.eq(&booking_url))
+                .select(booking_dsl::customer_id)
+                .load::<i32>(c)
+            {
+                Ok(v) if v.is_empty() => return Err(DatabaseError::NoEntry),
+                Ok(v) if v.len() > 1 => return Err(DatabaseError::Ambiguous),
+                Ok(mut v) => v.remove(0),
+                Err(e) => return Err(e.into()),
+            };
 
-    let appointments_vec: Vec<Appointment> = books
-        .filter(url.eq(booking_url))
-        .inner_join(appointments.on(schema::appointments::books_id.eq(schema::books::id)))
-        .select(schema::appointments::all_columns)
-        .load::<Appointment>(&conn.0)
-        .map_err(diesel_to_no_entry)?;
+            let appointments_vec: Vec<Appointment> = booking_dsl::books
+                .filter(booking_dsl::url.eq(booking_url))
+                .inner_join(appointment_dsl::appointments)
+                .select(Appointment::as_select())
+                .load::<Appointment>(c)
+                .map_err(diesel_to_no_entry)?;
 
-    Ok((appointments_vec, customer))
+            Ok((appointments_vec, customer))
+        })
+    })
+    .await
 }
 
 /// returns (customer, booking id) on success
 fn get_booking_details(
-    conn: &DBConn,
+    conn: &mut SqliteConnection,
     booking_ref: BookingReference,
 ) -> Result<(i32, i32), DatabaseError> {
-    let mut query = schema::books::table.into_boxed();
+    let mut query = booking_dsl::books.into_boxed();
 
     query = match booking_ref {
-        BookingReference::BookingId(booking_id) => query.filter(schema::books::id.eq(booking_id)),
-        BookingReference::BookingUrl(booking_url) => query.filter(url.eq(booking_url)),
+        BookingReference::BookingId(booking_id) => query.filter(booking_dsl::id.eq(booking_id)),
+        BookingReference::BookingUrl(booking_url) => query.filter(booking_dsl::url.eq(booking_url)),
     };
 
     let (customer, booking_id): (i32, i32) = match query
-        .select((customer_id, schema::books::id))
-        .load::<(i32, i32)>(&conn.0)
+        .select((booking_dsl::customer_id, booking_dsl::id))
+        .load::<(i32, i32)>(conn)
     {
         Ok(v) if v.is_empty() => return Err(DatabaseError::NoEntry),
         Ok(v) if v.len() > 1 => return Err(DatabaseError::Ambiguous),
@@ -160,15 +193,18 @@ fn get_booking_details(
         Err(e) => return Err(e.into()),
     };
 
-    return Ok((customer, booking_id));
+    Ok((customer, booking_id))
 }
 
-fn get_default_room_id_by_booking_id(conn: &DBConn, booking_id: i32) -> Result<i32, DatabaseError> {
-    let room: i32 = match books
-        .inner_join(courses.on(schema::courses::id.eq(course_id)))
-        .filter(schema::books::id.eq(booking_id))
-        .select(default_room_id)
-        .load(&conn.0)
+fn get_default_room_id_by_booking_id(
+    conn: &mut SqliteConnection,
+    booking_id: i32,
+) -> Result<i32, DatabaseError> {
+    let room: i32 = match booking_dsl::books
+        .inner_join(course_dsl::courses)
+        .filter(booking_dsl::id.eq(booking_id))
+        .select(course_dsl::default_room_id)
+        .load(conn)
     {
         Ok(v) if v.is_empty() => return Err(DatabaseError::NoEntry),
         Ok(v) if v.len() > 1 => return Err(DatabaseError::Ambiguous),
@@ -179,37 +215,40 @@ fn get_default_room_id_by_booking_id(conn: &DBConn, booking_id: i32) -> Result<i
     Ok(room)
 }
 
-pub fn add_appointments_by_customer(
+pub async fn add_appointments_by_customer(
     conn: &DBConn,
     booking_url: &str,
     mut appointment_list: Vec<AppointmentSuggestion>,
 ) -> Result<(), DatabaseError> {
-    use schema::appointments::dsl::*;
+    let booking_url = booking_url.to_owned();
 
-    conn.transaction(move || {
-        let (customer, booking_id) =
-            get_booking_details(conn, BookingReference::BookingUrl(booking_url))?;
-        let room = get_default_room_id_by_booking_id(conn, booking_id)?;
-        let appt = appointment_list.drain(..).map(|sug| NewAppointment {
-            start_time: sug.start_time,
-            end_time: sug.end_time,
-            state: String::from("SUGGESTED"),
-            proposer_id: customer,
-            books_id: booking_id,
-            room_id: room,
-        });
+    conn.run(move |c| {
+        c.transaction(|c| {
+            let (customer, booking_id) =
+                get_booking_details(c, BookingReference::BookingUrl(booking_url))?;
+            let room = get_default_room_id_by_booking_id(c, booking_id)?;
+            let appt = appointment_list.drain(..).map(|sug| NewAppointment {
+                start_time: sug.start_time,
+                end_time: sug.end_time,
+                state: String::from("SUGGESTED"),
+                proposer_id: customer,
+                books_id: booking_id,
+                room_id: room,
+            });
 
-        for a in appt {
-            insert_into(appointments)
-                .values(a)
-                .execute(&conn.0)
-                .map_err(diesel_to_no_entry)?;
-        }
-        Ok(())
+            for a in appt {
+                insert_into(appointment_dsl::appointments)
+                    .values(a)
+                    .execute(c)
+                    .map_err(diesel_to_no_entry)?;
+            }
+            Ok(())
+        })
     })
+    .await
 }
 
-pub fn add_appointments_by_provider(
+pub async fn add_appointments_by_provider(
     conn: &DBConn,
     booking_id: i32,
     mut appointment_list: Vec<AppointmentSuggestion>,
@@ -217,103 +256,107 @@ pub fn add_appointments_by_provider(
 ) -> Result<(), DatabaseError> {
     use schema::appointments::dsl::*;
 
-    conn.transaction(move || {
-        let room = get_default_room_id_by_booking_id(conn, booking_id)?;
+    conn.run(move |c| {
+        c.transaction(move |c| {
+            let room = get_default_room_id_by_booking_id(c, booking_id)?;
 
-        let appt = appointment_list.drain(..).map(|sug| NewAppointment {
-            start_time: sug.start_time,
-            end_time: sug.end_time,
-            state: String::from("SUGGESTED"),
-            proposer_id: provider,
-            books_id: booking_id,
-            room_id: room,
-        });
+            let appt = appointment_list.drain(..).map(|sug| NewAppointment {
+                start_time: sug.start_time,
+                end_time: sug.end_time,
+                state: String::from("SUGGESTED"),
+                proposer_id: provider,
+                books_id: booking_id,
+                room_id: room,
+            });
 
-        for a in appt {
-            insert_into(appointments)
-                .values(a)
-                .execute(&conn.0)
-                .map_err(diesel_to_no_entry)?;
-        }
-        Ok(())
+            for a in appt {
+                insert_into(appointments)
+                    .values(a)
+                    .execute(c)
+                    .map_err(diesel_to_no_entry)?;
+            }
+            Ok(())
+        })
     })
+    .await
 }
 
 fn other_appointment_fields_changed(old: &Appointment, new: &Appointment) -> bool {
-    return !(old.start_time == new.start_time
+    !(old.start_time == new.start_time
         && old.end_time == new.end_time
         && old.proposer_id == new.proposer_id
-        && old.books_id == new.books_id);
+        && old.books_id == new.books_id)
 }
 
 /// Enum used to pass one of the two types referencing a Booking Process.  
 /// Used when a Database Function is built Provider/Customer agnostic.
-pub enum BookingReference<'a> {
+#[derive(Clone)]
+pub enum BookingReference {
     BookingId(i32),
-    BookingUrl(&'a str),
+    BookingUrl(String),
 }
 
 /// Cycles through the list of provided appointments that are to be updated,    
 /// checks each for existence, validity of updated values and authorization    
 /// for updating the specific fields. If all checks out, all changes get written    
 /// to the database. If not, the transaction gets canceled and a [DatabaseError] is returned.
-pub fn update_appointments(
+pub async fn update_appointments(
     conn: &DBConn,
     booking_ref: BookingReference,
     appointment_list: Vec<Appointment>,
     provider: Option<i32>,
 ) -> Result<(), DatabaseError> {
-    use schema::appointments::dsl::*;
+    conn.run(move |c|{
+        c.transaction(|c| {
 
-    conn.transaction(move || {
+            let (customer, _) = get_booking_details(c, booking_ref)?;
 
-        let (customer, booking_id) = get_booking_details(conn, booking_ref)?;
+            trace!(target: "db::update_appointments", "found customer {}", customer);
 
-        trace!(target: "db::update_appointments", "found customer {}", customer);
+            for updated_appointment in appointment_list {
 
-        for updated_appointment in appointment_list {
+                trace!(target: "db::update_appointments", "searching for appointment {}", updated_appointment.id);
 
-            trace!(target: "db::update_appointments", "searching for appointment {}", updated_appointment.id);
+                let old_appointment : Appointment = appointment_dsl::appointments.find(updated_appointment.id).first::<Appointment>(c).map_err(diesel_to_no_entry)?;
 
-            let old_appointment : Appointment = appointments.find(updated_appointment.id).first::<Appointment>(&conn.0).map_err(diesel_to_no_entry)?;
+                trace!(target: "db::update_appointments", "found appointment {}", updated_appointment.id);
 
-            trace!(target: "db::update_appointments", "found appointment {}", updated_appointment.id);
-
-            // only allow room_id or state to change
-            if other_appointment_fields_changed(&old_appointment, &updated_appointment) {
-                return Err(DatabaseError::InvalidChange);
-            }
-
-            // only allow update of state if current state is "SUGGESTED"
-            if old_appointment.state != "SUGGESTED" {
-                return Err(DatabaseError::InvalidChange);
-            }
-
-            // return Error if room was changed and request is not made by a provider
-            // otherwise check if ID of proposer is different than requesting person ID
-            if let Some(provider_id) = provider {
-                if provider_id == old_appointment.proposer_id {
+                // only allow room_id or state to change
+                if other_appointment_fields_changed(&old_appointment, &updated_appointment) {
                     return Err(DatabaseError::InvalidChange);
                 }
-            } else if (updated_appointment.room_id != old_appointment.room_id) || (customer == old_appointment.proposer_id){
-                return Err(DatabaseError::InvalidChange);}
 
-            // check if state is changed to one of the two valid states following "SUGGESTED"
-            if updated_appointment.state != "REJECTED" && updated_appointment.state != "APPROVED"{
-                return Err(DatabaseError::InvalidChange);
+                // only allow update of state if current state is "SUGGESTED"
+                if old_appointment.state != "SUGGESTED" {
+                    return Err(DatabaseError::InvalidChange);
+                }
+
+                // return Error if room was changed and request is not made by a provider
+                // otherwise check if ID of proposer is different than requesting person ID
+                if let Some(provider_id) = provider {
+                    if provider_id == old_appointment.proposer_id {
+                        return Err(DatabaseError::InvalidChange);
+                    }
+                } else if (updated_appointment.room_id != old_appointment.room_id) || (customer == old_appointment.proposer_id){
+                    return Err(DatabaseError::InvalidChange);}
+
+                // check if state is changed to one of the two valid states following "SUGGESTED"
+                if updated_appointment.state != "REJECTED" && updated_appointment.state != "APPROVED"{
+                    return Err(DatabaseError::InvalidChange);
+                }
+
+                diesel::update(&old_appointment).set(&updated_appointment).execute(c)?;
+
+                trace!(target: "db::update_appointments", "updated appointment {}", updated_appointment.id);
             }
 
-            diesel::update(&old_appointment).set(&updated_appointment).execute(&conn.0)?;
 
-            trace!(target: "db::update_appointments", "updated appointment {}", updated_appointment.id);
-        }
-
-
-        Ok(())
-    })
+            Ok(())
+        })
+    }).await
 }
 
-pub fn withdraw_appointments(
+pub async fn withdraw_appointments(
     conn: &DBConn,
     booking_ref: BookingReference,
     withdrawn_appointments: Vec<i32>,
@@ -321,48 +364,54 @@ pub fn withdraw_appointments(
 ) -> Result<(), DatabaseError> {
     use schema::appointments::dsl::*;
 
-    let (customer, _) = get_booking_details(conn, booking_ref)?;
+    conn.run(move |c|{
+        c.transaction(|c| {
 
-    let person = provider.unwrap_or(customer);
+            let (customer, _) = get_booking_details(c, booking_ref)?;
 
-    trace!(target: "db::withdraw_appointments", "found customer {}", customer);
+            let person = provider.unwrap_or(customer);
 
-    for withdrawn_appointment in withdrawn_appointments {
-        trace!(target: "db::withdraw_appointments", "searching for appointment {}", withdrawn_appointment);
+            trace!(target: "db::withdraw_appointments", "found customer {}", customer);
 
-        let old_appointment: Appointment = match appointments
-            .find(withdrawn_appointment)
-            .first::<Appointment>(&conn.0)
-            .map_err(diesel_to_no_entry)
-        {
-            Ok(a) => a,
-            Err(e) => return Err(e.into()),
-        };
+            for withdrawn_appointment in withdrawn_appointments {
+                trace!(target: "db::withdraw_appointments", "searching for appointment {}", withdrawn_appointment);
 
-        trace!(target: "db::withdraw_appointments", "found appointment {}", withdrawn_appointment);
+                let old_appointment: Appointment = match appointments
+                    .find(withdrawn_appointment)
+                    .first::<Appointment>(c)
+                    .map_err(diesel_to_no_entry)
+                {
+                    Ok(a) => a,
+                    Err(e) => return Err(e),
+                };
 
-        // only allow withdrawal if current state is "SUGGESTED"
-        if old_appointment.state != "SUGGESTED" {
-            return Err(DatabaseError::InvalidChange);
-        }
+                trace!(target: "db::withdraw_appointments", "found appointment {}", withdrawn_appointment);
 
-        if old_appointment.proposer_id != person {
-            return Err(DatabaseError::InvalidChange);
-        }
+                // only allow withdrawal if current state is "SUGGESTED"
+                if old_appointment.state != "SUGGESTED" {
+                    return Err(DatabaseError::InvalidChange);
+                }
 
-        match diesel::delete(appointments.filter(id.eq(withdrawn_appointment))).execute(&conn.0) {
-            Ok(1) => {}
-            Ok(0) => {
-                error!(target: "db::withdraw_appointments", "appointment {} deletion req. checked out but row not found", withdrawn_appointment);
-                return Err(DatabaseError::NoEntry);
+                if old_appointment.proposer_id != person {
+                    return Err(DatabaseError::InvalidChange);
+                }
+
+                match diesel::delete(appointments.filter(id.eq(withdrawn_appointment))).execute(c)
+                {
+                    Ok(1) => {}
+                    Ok(0) => {
+                        error!(target: "db::withdraw_appointments", "appointment {} deletion req. checked out but row not found", withdrawn_appointment);
+                        return Err(DatabaseError::NoEntry);
+                    }
+                    Ok(_) => {
+                        error!(target: "db::withdraw_appointments", "appointment {} deletion req. checked out but multiple rows", withdrawn_appointment);
+                        return Err(DatabaseError::Ambiguous);
+                    }
+                    Err(e) => return Err(e.into()),
+                }
             }
-            Ok(_) => {
-                error!(target: "db::withdraw_appointments", "appointment {} deletion req. checked out but multiple rows", withdrawn_appointment);
-                return Err(DatabaseError::Ambiguous);
-            }
-            Err(e) => return Err(e.into()),
-        }
-    }
 
-    Ok(())
+            Ok(())
+        })
+    }).await
 }
