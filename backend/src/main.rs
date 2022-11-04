@@ -1,6 +1,7 @@
 use log::info;
 
 pub mod db;
+pub mod error;
 pub mod http_api;
 use rocket::launch;
 

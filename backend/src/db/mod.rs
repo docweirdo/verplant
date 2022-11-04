@@ -1,5 +1,8 @@
-use log::{error, info, trace};
+use log::{error, info, trace, warn};
 use pwhash::bcrypt;
+use rocket::http::Status;
+use rocket::request::Request;
+use rocket::response::{self, Responder};
 use rocket_sync_db_pools::database;
 use rocket_sync_db_pools::diesel::{insert_into, prelude::*, update};
 use thiserror::Error;
@@ -33,7 +36,7 @@ pub async fn verify_user(
 
     conn.run(move |c| {
         match person_dsl::persons
-            .filter(person_dsl::email.eq(user_email))
+            .filter(person_dsl::email.eq(&user_email))
             .inner_join(provider_dsl::providers)
             .select((provider_dsl::password_hash, provider_dsl::person_id))
             .first::<(Option<String>, i32)>(c)
@@ -43,10 +46,20 @@ pub async fn verify_user(
                 if bcrypt::verify(password, &pw_hash) {
                     Ok(person_id)
                 } else {
-                    Err(DatabaseError::PasswordMatch)
+                    let error = DatabaseError::PasswordMatch;
+                    info!(
+                        "wrong password for email {}: {}",
+                        user_email,
+                        DatabaseError::PasswordMatch
+                    );
+                    Err(error)
                 }
             }
-            _ => Err(DatabaseError::NoEntry),
+            _ => {
+                let error = DatabaseError::NoEntry;
+                warn!("no password for email {}: {}", user_email, error);
+                Err(error)
+            }
         }
     })
     .await
@@ -87,14 +100,29 @@ pub async fn is_user_admin(conn: DBConn, user_id: i32) -> Result<bool, DatabaseE
 pub enum DatabaseError {
     #[error(transparent)]
     DieselError(#[from] diesel::result::Error),
+
     #[error("No entry found")]
     NoEntry,
+
     #[error("Passwords don't match")]
     PasswordMatch,
+
     #[error("Ambiguous result, too many entries")]
     Ambiguous,
+
     #[error("Update invalid, unallowed changes or inconsistent data")]
     InvalidChange,
+}
+
+impl<'r, 'o: 'r> Responder<'r, 'o> for DatabaseError {
+    fn respond_to(self, req: &'r Request<'_>) -> response::Result<'o> {
+        let status = match self {
+            DatabaseError::NoEntry => Status::NotFound,
+            DatabaseError::InvalidChange => Status::Forbidden,
+            _ => Status::InternalServerError,
+        };
+        status.respond_to(req)
+    }
 }
 
 /// This function maps Diesels not found error to our NoEntry error for easier matching

@@ -1,5 +1,5 @@
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
-use log::{error, info, warn};
+use log::{error, warn};
 use rocket::{
     self, get,
     http::{Cookie, CookieJar, Status},
@@ -12,7 +12,7 @@ use rocket::{
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
 
-use crate::db;
+use crate::{db, error::VerplantError};
 use db::DBConn;
 use db::DatabaseError;
 
@@ -40,29 +40,11 @@ pub async fn login(
     cookie_jar: &CookieJar<'_>,
     credentials: Json<Credentials>,
     conn: DBConn,
-) -> Status {
+) -> Result<(), VerplantError> {
     let email = credentials.email.trim();
     let password = credentials.password.trim();
 
-    let id = match db::verify_user(&conn, email, password).await {
-        Ok(id) => id,
-        Err(DatabaseError::PasswordMatch) => {
-            info!(target: "/login", "wrong password for email {}: {}", email, DatabaseError::PasswordMatch);
-            return Status::Unauthorized;
-        }
-        Err(DatabaseError::DieselError(e)) => {
-            error!(target: "/login", "database error with email {}: {}", email, e);
-            return Status::InternalServerError;
-        }
-        Err(DatabaseError::NoEntry) => {
-            warn!(target: "/login", "no password for email {}: {}", email, DatabaseError::NoEntry);
-            return Status::Unauthorized;
-        }
-        Err(e) => {
-            warn!(target: "/login", "undefined error for email {}: {}", email, e);
-            return Status::InternalServerError;
-        }
-    };
+    let id = db::verify_user(&conn, email, password).await?;
 
     // Create JWT
     let now: u64 = SystemTime::UNIX_EPOCH.elapsed().unwrap().as_secs();
@@ -80,7 +62,7 @@ pub async fn login(
     ) {
         token
     } else {
-        return Status::InternalServerError;
+        return Err(VerplantError::StatusCode(500));
     };
 
     //TODO: Set secure only
@@ -92,7 +74,7 @@ pub async fn login(
             .finish(),
     );
 
-    Status::Ok
+    Ok(())
 }
 
 #[get("/test/<password>")]
